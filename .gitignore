@@ -1,1 +1,5 @@
+# General
+__pycache__/*
+
+# Pycharm
 .idea/*

@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 from random import randint, randrange, uniform
 
-n_samples = 5
+n_samples = 50
 dim = 28
 min_width, max_width = 2, 8
 wall_width = 2
@@ -61,3 +61,4 @@ for idx in range(n_samples):
     speed_labels.append(speed)
 
 np.savetxt(("%s%s" % (path_to_store_dataset, 'speed_labels.csv')), speed_labels, delimiter=',', fmt='%10.5f')
+print("Generated", n_samples, "samples, written to:", path_to_store_dataset)
