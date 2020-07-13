@@ -40,12 +40,10 @@ def decomposition(leftovers, min_val, max_val):
         leftovers -= n
 
 
-start = np.array([0, int(dim / 2)])
-w, h = dim, dim
-speed_labels = []
-
-
 def generate_and_save_samples(data_ratio, data_subset_type):
+    start = np.array([0, int(dim / 2)])
+    w, h = dim, dim
+    speed_labels = []
     num_samples = int(total_num_samples * data_ratio)
     split_data_folder = "%s%s%s" % (path_to_store_dataset, data_subset_type, '/')
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
