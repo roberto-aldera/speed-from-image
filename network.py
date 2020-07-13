@@ -34,5 +34,5 @@ class Net(nn.Module):
         return num_features
 
 
-net = Net()
-print(net)
+# net = Net()
+# print(net)
