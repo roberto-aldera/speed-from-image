@@ -6,20 +6,11 @@ from torchvision import transforms
 from dataset_loader import TunnelDataset, ToTensor
 from network import Net
 
-# Read in dataset and split into train, validate, and test data
-full_dataset = TunnelDataset(csv_file='/Users/roberto/code/speed-from-image/images/speed_labels.csv',
-                             root_dir='/Users/roberto/code/speed-from-image/images/',
-                             transform=transforms.Compose([ToTensor()]))
-train_ratio = 0.7
-validate_ratio = 0.1
-train_size = int(train_ratio * len(full_dataset))
-val_size = int(validate_ratio * len(full_dataset))
-test_size = len(full_dataset) - (train_size + val_size)
-train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(full_dataset,
-                                                                         [train_size, val_size, test_size])
+train_dataset = TunnelDataset(root_dir='/Users/roberto/code/speed-from-image/images/',
+                              data_subset_type="training",
+                              transform=transforms.Compose([ToTensor()]))
+
 print('Training set size:', len(train_dataset))
-print('Validation set size:', len(val_dataset))
-print('Test set size:', len(test_dataset))
 
 sample = train_dataset[0]
 print(0, sample['image'].size(), sample['speeds'].size())
@@ -58,6 +49,8 @@ for epoch in range(50):  # loop over the dataset multiple times
             running_loss = 0.0
 #             print(inputs.shape)
 #             print(labels.shape)
+
+torch.save(net.state_dict(), "/Users/roberto/code/speed-from-image/models/myModel.pt")
 
 print('Finished Training')
 plt.figure(figsize=(15, 5))

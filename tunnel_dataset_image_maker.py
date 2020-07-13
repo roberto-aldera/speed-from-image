@@ -1,11 +1,18 @@
 import numpy as np
 from PIL import Image
 from random import randint, randrange, uniform
+from pathlib import Path
 
-n_samples = 50
+total_num_samples = 50
+train_ratio = 0.7
+val_ratio = 0.1
+test_ratio = 1 - (train_ratio + val_ratio)
+
 dim = 28
 min_width, max_width = 2, 8
 wall_width = 2
+random_noise_level = 0.5
+
 path_to_store_dataset = '/Users/roberto/code/speed-from-image/images/'
 
 
@@ -37,28 +44,39 @@ start = np.array([0, int(dim / 2)])
 w, h = dim, dim
 speed_labels = []
 
-for idx in range(n_samples):
-    width = np.zeros(dim, dtype=np.uint8)
-    data = np.zeros((h, w), dtype=np.uint8)
-    step_vals = list(decomposition(dim, min_width, max_width))  # generate random partitions
-    total = 0
 
-    for i in range(len(step_vals)):
-        width[total:total + step_vals[i]] = randrange(min_width, max_width)
-        total += step_vals[i]
+def generate_and_save_samples(data_ratio, data_subset_type):
+    num_samples = int(total_num_samples * data_ratio)
+    split_data_folder = "%s%s%s" % (path_to_store_dataset, data_subset_type, '/')
+    Path(split_data_folder).mkdir(parents=True, exist_ok=True)
+    for idx in range(num_samples):
+        width = np.zeros(dim, dtype=np.uint8)
+        data = np.zeros((h, w), dtype=np.uint8)
+        step_vals = list(decomposition(dim, min_width, max_width))  # generate random partitions
+        total = 0
 
-    for i in range(dim):
-        data[i, start[1] + width[i]:start[1] + width[i] + wall_width] = 255  # left wall
-        data[i, start[1] - width[i]:start[1] - width[i] + wall_width] = 255  # right wall
+        for i in range(len(step_vals)):
+            width[total:total + step_vals[i]] = randrange(min_width, max_width)
+            total += step_vals[i]
 
-    img = Image.fromarray(data, 'L')
-    img.save("%s%s%i%s" % (path_to_store_dataset, 'img-', idx, '.png'))
+        for i in range(dim):
+            data[i, start[1] + width[i]:start[1] + width[i] + wall_width] = 255  # left wall
+            data[i, start[1] - width[i]:start[1] - width[i] + wall_width] = 255  # right wall
 
-    # Add noise to width data and treat this as speed
-    speed = np.zeros(dim)
-    for i in range(len(speed)):
-        speed[i] = width[i] + uniform(-0.5, 0.5)
-    speed_labels.append(speed)
+        img = Image.fromarray(data, 'L')
+        img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, '_', idx, '.png'))
 
-np.savetxt(("%s%s" % (path_to_store_dataset, 'speed_labels.csv')), speed_labels, delimiter=',', fmt='%10.5f')
-print("Generated", n_samples, "samples, written to:", path_to_store_dataset)
+        # Add noise to width data and treat this as speed
+        speed = np.zeros(dim)
+        for i in range(len(speed)):
+            speed[i] = width[i] + uniform(-random_noise_level, random_noise_level)
+        speed_labels.append(speed)
+
+    np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, '_speed_labels.csv')), speed_labels, delimiter=',',
+               fmt='%10.5f')
+    print("Generated", num_samples, data_subset_type, "samples, written to:", split_data_folder)
+
+
+generate_and_save_samples(train_ratio, "training")
+generate_and_save_samples(val_ratio, "validation")
+generate_and_save_samples(test_ratio, "test")

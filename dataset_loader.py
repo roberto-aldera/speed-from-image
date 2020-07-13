@@ -3,23 +3,24 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
 import torch
-
 from torch.utils.data import Dataset
 
 
 class TunnelDataset(Dataset):
     """Tunnel dataset."""
 
-    def __init__(self, csv_file, root_dir, transform=None):
+    def __init__(self, root_dir, data_subset_type, transform=None):
         """
         Args:
-            csv_file (string): Path to the csv file with targets.
             root_dir (string): Directory with all the images.
+            data_subset_type (string): Specify if the required data is "training", "validation", or "test"
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.speeds_frame = pd.read_csv(csv_file, header=None)
-        self.root_dir = root_dir
+        self.speeds_frame = pd.read_csv(root_dir + data_subset_type + "/" + data_subset_type + "_speed_labels.csv",
+                                        header=None)
+        self.root_dir = root_dir + data_subset_type + "/"
+        self.data_subset_type = data_subset_type
         self.transform = transform
 
     def __len__(self):
@@ -28,7 +29,7 @@ class TunnelDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = self.root_dir + 'img-' + str(idx) + '.png'
+        img_name = self.root_dir + self.data_subset_type + '_' + str(idx) + '.png'
         image = np.array(Image.open(img_name))
         speeds = np.array(self.speeds_frame.iloc[idx])
         sample = {'image': image, 'speeds': speeds}
@@ -51,8 +52,9 @@ class ToTensor(object):
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
-    tunnel_dataset = TunnelDataset(csv_file='/Users/roberto/code/speed-from-image/images/speed_labels.csv',
-                                   root_dir='/Users/roberto/code/speed-from-image/images/')
+    tunnel_dataset = TunnelDataset(
+        root_dir='/Users/roberto/code/speed-from-image/images/',
+        data_subset_type="training")
     tunnels_idx = 0
     tunnel = tunnel_dataset[tunnels_idx]
 
