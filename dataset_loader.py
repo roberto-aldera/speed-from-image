@@ -29,7 +29,7 @@ class TunnelDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = self.root_dir + self.data_subset_type + '_' + str(idx) + '.png'
+        img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + ".png"
         image = np.array(Image.open(img_name))
         speeds = np.array(self.speeds_frame.iloc[idx])
         sample = {'image': image, 'speeds': speeds}
@@ -53,7 +53,7 @@ class ToTensor(object):
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     tunnel_dataset = TunnelDataset(
-        root_dir='/Users/roberto/code/speed-from-image/images/',
+        root_dir="/Users/roberto/code/speed-from-image/images/",
         data_subset_type="training")
     tunnels_idx = 0
     tunnel = tunnel_dataset[tunnels_idx]

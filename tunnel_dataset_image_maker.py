@@ -3,7 +3,7 @@ from PIL import Image
 from random import randint, randrange, uniform
 from pathlib import Path
 
-total_num_samples = 50
+total_num_samples = 500
 train_ratio = 0.7
 val_ratio = 0.1
 test_ratio = 1 - (train_ratio + val_ratio)
@@ -13,7 +13,7 @@ min_width, max_width = 2, 8
 wall_width = 2
 random_noise_level = 0.5
 
-path_to_store_dataset = '/Users/roberto/code/speed-from-image/images/'
+path_to_store_dataset = "/Users/roberto/code/speed-from-image/images/"
 
 
 def decomposition(leftovers, min_val, max_val):
@@ -45,7 +45,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
     w, h = dim, dim
     speed_labels = []
     num_samples = int(total_num_samples * data_ratio)
-    split_data_folder = "%s%s%s" % (path_to_store_dataset, data_subset_type, '/')
+    split_data_folder = "%s%s%s" % (path_to_store_dataset, data_subset_type, "/")
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
     for idx in range(num_samples):
         width = np.zeros(dim, dtype=np.uint8)
@@ -62,7 +62,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             data[i, start[1] - width[i]:start[1] - width[i] + wall_width] = 255  # right wall
 
         img = Image.fromarray(data, 'L')
-        img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, '_', idx, '.png'))
+        img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
 
         # Add noise to width data and treat this as speed
         speed = np.zeros(dim)
@@ -70,8 +70,8 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             speed[i] = width[i] + uniform(-random_noise_level, random_noise_level)
         speed_labels.append(speed)
 
-    np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, '_speed_labels.csv')), speed_labels, delimiter=',',
-               fmt='%10.5f')
+    np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_speed_labels.csv")), speed_labels, delimiter=",",
+               fmt="%10.5f")
     print("Generated", num_samples, data_subset_type, "samples, written to:", split_data_folder)
 
 

@@ -3,17 +3,21 @@ from torchvision import transforms
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 from dataset_loader import TunnelDataset, ToTensor
 from network import Net
 
 model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
+fig_path = "/Users/roberto/code/speed-from-image/evaluation"
+Path(fig_path).mkdir(parents=True, exist_ok=True)
+
 model = Net()
 model.load_state_dict(torch.load(model_path))
 model.eval()
-print('Loaded model from', model_path, '-> ready to evaluate.')
+print("Loaded model from", model_path, "-> ready to evaluate.")
 
-train_dataset = TunnelDataset(root_dir='/Users/roberto/code/speed-from-image/images/',
+train_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
                               data_subset_type="training",
                               transform=transforms.Compose([ToTensor()]))
 train_loader = DataLoader(train_dataset, batch_size=1,
@@ -24,17 +28,17 @@ img = train_loader.dataset[img_idx]['image'].unsqueeze_(0).unsqueeze_(0)
 speed_labels = train_loader.dataset[img_idx]['speeds']
 
 speed_estimate = model(img).detach().numpy()
-plt.plot(speed_labels, label='Ground truth')
-plt.plot(speed_estimate[0], label='Prediction')
-plt.xlabel('Index')
-plt.ylabel('Speed (or width)')
+plt.plot(speed_labels, label="Ground truth")
+plt.plot(speed_estimate[0], label="Prediction")
+plt.xlabel("Index")
+plt.ylabel("Speed (or width)")
 plt.legend()
 plt.grid()
 # print(speed_estimate)
-plt.savefig('/Users/roberto/code/speed-from-image/evaluation/training-performance.png')
+plt.savefig("/Users/roberto/code/speed-from-image/evaluation/training-performance.png")
 
 # Validation set
-val_dataset = TunnelDataset(root_dir='/Users/roberto/code/speed-from-image/images/',
+val_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
                             data_subset_type="validation",
                             transform=transforms.Compose([ToTensor()]))
 val_loader = DataLoader(val_dataset, batch_size=1,
@@ -47,13 +51,13 @@ for i in range(1):
 
     speed_estimate = model(img).detach().numpy()
     plt.figure()
-    plt.plot(speed_labels, label='Ground truth')
-    plt.plot(speed_estimate[0], label='Prediction')
-    plt.xlabel('Index')
-    plt.ylabel('Speed (or width)')
+    plt.plot(speed_labels, label="Ground truth")
+    plt.plot(speed_estimate[0], label="Prediction")
+    plt.xlabel("Index")
+    plt.ylabel("Speed (or width)")
     plt.legend()
     plt.grid()
-    plt.savefig('/Users/roberto/code/speed-from-image/evaluation/validation-performance.png')
+    plt.savefig("/Users/roberto/code/speed-from-image/evaluation/validation-performance.png")
 
 # RMSE comparisons
 print("Average RMSE (over entire subset)")
