@@ -2,14 +2,18 @@ import numpy as np
 from PIL import Image
 from random import randint, randrange, uniform
 from pathlib import Path
+import time
+
+start_time = time.time()
 
 total_num_samples = 500
 train_ratio = 0.7
 val_ratio = 0.1
 test_ratio = 1 - (train_ratio + val_ratio)
 
-dim = 28
-min_width, max_width = 2, 8
+dim = 64
+min_width, max_width = 8, 16
+min_length, max_length = 15, 20
 wall_width = 2
 random_noise_level = 0.5
 
@@ -50,7 +54,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
     for idx in range(num_samples):
         width = np.zeros(dim, dtype=np.uint8)
         data = np.zeros((h, w), dtype=np.uint8)
-        step_vals = list(decomposition(dim, min_width, max_width))  # generate random partitions
+        step_vals = list(decomposition(dim, min_length, max_length))  # generate random partitions
         total = 0
 
         for i in range(len(step_vals)):
@@ -78,3 +82,5 @@ def generate_and_save_samples(data_ratio, data_subset_type):
 generate_and_save_samples(train_ratio, "training")
 generate_and_save_samples(val_ratio, "validation")
 generate_and_save_samples(test_ratio, "test")
+
+print("--- Execution time: %s seconds ---" % (time.time() - start_time))
