@@ -11,8 +11,8 @@ from network import Net
 start_time = time.time()
 
 model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
-fig_path = "/Users/roberto/code/speed-from-image/evaluation"
-Path(fig_path).mkdir(parents=True, exist_ok=True)
+results_path = "/Users/roberto/code/speed-from-image/evaluation"
+Path(results_path).mkdir(parents=True, exist_ok=True)
 
 train_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
                               data_subset_type="training",
@@ -66,7 +66,7 @@ for epoch in range(20):  # loop over the dataset multiple times
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss after each epoch")
-    plt.savefig(fig_path+"/training_loss.png")
+    plt.savefig(results_path+"/training_loss.png")
     plt.close()
 print("Finished Training")
 print("--- Execution time: %s seconds ---" % (time.time() - start_time))
