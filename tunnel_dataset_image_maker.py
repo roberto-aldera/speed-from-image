@@ -15,7 +15,7 @@ dim = 64
 min_width, max_width = 8, 16
 min_length, max_length = 15, 20
 wall_width = 2
-random_noise_level = 0.5
+speed_noise_level = 0.25
 
 path_to_store_dataset = "/Users/roberto/code/speed-from-image/images/"
 
@@ -54,6 +54,16 @@ def generate_and_save_samples(data_ratio, data_subset_type):
     for idx in range(num_samples):
         width = np.zeros(dim, dtype=np.uint8)
         data = np.zeros((h, w), dtype=np.uint8)
+        wall_brightness = randint(150, 255)  # vary the wall brightness (but keep same for whole image)
+
+        # Add some Gaussian noise to background of toy images
+        row, col = data.shape
+        mean, var = 50, 300
+        sigma = var ** 0.5
+        gauss = np.random.normal(mean, sigma, (row, col))
+        gauss = gauss.reshape(row, col).astype(np.uint8)
+        data += gauss
+
         step_vals = list(decomposition(dim, min_length, max_length))  # generate random partitions
         total = 0
 
@@ -62,8 +72,8 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             total += step_vals[i]
 
         for i in range(dim):
-            data[i, start[1] + width[i]:start[1] + width[i] + wall_width] = 255  # left wall
-            data[i, start[1] - width[i]:start[1] - width[i] + wall_width] = 255  # right wall
+            data[i, start[1] + width[i]:start[1] + width[i] + wall_width] = wall_brightness  # 255  # left wall
+            data[i, start[1] - width[i]:start[1] - width[i] + wall_width] = wall_brightness  # 255  # right wall
 
         img = Image.fromarray(data, 'L')
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
@@ -71,7 +81,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         # Add noise to width data and treat this as speed
         speed = np.zeros(dim)
         for i in range(len(speed)):
-            speed[i] = width[i] + uniform(-random_noise_level, random_noise_level)
+            speed[i] = width[i] + uniform(-speed_noise_level, speed_noise_level)
         speed_labels.append(speed)
 
     np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_speed_labels.csv")), speed_labels, delimiter=",",
