@@ -6,7 +6,7 @@ import time
 
 start_time = time.time()
 
-total_num_samples = 500
+total_num_samples = 1000
 train_ratio = 0.7
 val_ratio = 0.1
 test_ratio = 1 - (train_ratio + val_ratio)
