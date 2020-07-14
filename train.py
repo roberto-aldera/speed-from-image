@@ -3,9 +3,12 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from pathlib import Path
+import time
 
 from dataset_loader import TunnelDataset, ToTensor
 from network import Net
+
+start_time = time.time()
 
 model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
 fig_path = "/Users/roberto/code/speed-from-image/evaluation"
@@ -65,3 +68,5 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Loss after each epoch")
 plt.savefig(fig_path+"/training_loss.png")
+
+print("--- Execution time: %s seconds ---" % (time.time() - start_time))
