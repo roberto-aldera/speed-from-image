@@ -5,17 +5,16 @@ from torchvision import transforms
 from pathlib import Path
 import time
 
+import settings
 from dataset_loader import TunnelDataset, ToTensor
 from network import Net
 
 start_time = time.time()
 
-model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
-results_path = "/Users/roberto/code/speed-from-image/evaluation"
-Path(results_path).mkdir(parents=True, exist_ok=True)
+Path(settings.RESULTS_DIR).mkdir(parents=True, exist_ok=True)
 
-train_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
-                              data_subset_type="training",
+train_dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
+                              data_subset_type=settings.TRAIN_SUBSET,
                               transform=transforms.Compose([ToTensor()]))
 
 print("Training set size:", len(train_dataset))
@@ -55,10 +54,10 @@ for epoch in range(20):  # loop over the dataset multiple times
                   (epoch + 1, batch_idx + 1, running_loss / 1))
             losses_over_epochs.append(running_loss)
             running_loss = 0.0
-#             print(inputs.shape)
-#             print(labels.shape)
+    #             print(inputs.shape)
+    #             print(labels.shape)
 
-    torch.save(net.state_dict(), model_path)
+    torch.save(net.state_dict(), settings.MODEL_PATH)
 
     plt.figure(figsize=(15, 5))
     plt.plot(losses_over_epochs, '.-')
@@ -66,7 +65,7 @@ for epoch in range(20):  # loop over the dataset multiple times
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title("Loss after each epoch")
-    plt.savefig(results_path+"/training_loss.png")
+    plt.savefig(settings.RESULTS_DIR + "/training_loss.png")
     plt.close()
 print("Finished Training")
 print("--- Execution time: %s seconds ---" % (time.time() - start_time))

@@ -4,6 +4,7 @@ from PIL import Image
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+import settings
 
 
 class TunnelDataset(Dataset):
@@ -53,8 +54,8 @@ class ToTensor(object):
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     tunnel_dataset = TunnelDataset(
-        root_dir="/Users/roberto/code/speed-from-image/images/",
-        data_subset_type="training")
+        root_dir=settings.IMAGE_DIR,
+        data_subset_type=settings.TRAIN_SUBSET)
     tunnels_idx = 0
     tunnel = tunnel_dataset[tunnels_idx]
 

@@ -6,13 +6,11 @@ import numpy as np
 from pathlib import Path
 import time
 
+import settings
 from dataset_loader import TunnelDataset, ToTensor
 from network import Net
 
 start_time = time.time()
-
-model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
-results_path = "/Users/roberto/code/speed-from-image/evaluation/"
 
 
 def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
@@ -21,7 +19,7 @@ def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
                              shuffle=False, num_workers=1)
-    subset_fig_path = results_path + data_subset_type + "/"
+    subset_fig_path = settings.RESULTS_DIR + data_subset_type + "/"
     Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
 
     for i in range(num_samples_to_eval):
@@ -60,19 +58,19 @@ def calculate_rmse(data_subset_type):
 
 
 model = Net()
-model.load_state_dict(torch.load(model_path))
+model.load_state_dict(torch.load(settings.MODEL_PATH))
 model.eval()
-print("Loaded model from", model_path, "-> ready to evaluate.")
+print("Loaded model from", settings.MODEL_PATH, "-> ready to evaluate.")
 
 print("Generating evaluation plots...")
 num_samples = 5
-generate_subset_evaluation_plots("training", num_samples)
-generate_subset_evaluation_plots("validation", num_samples)
-generate_subset_evaluation_plots("test", num_samples)
+generate_subset_evaluation_plots(settings.TRAIN_SUBSET, num_samples)
+generate_subset_evaluation_plots(settings.VAL_SUBSET, num_samples)
+generate_subset_evaluation_plots(settings.TEST_SUBSET, num_samples)
 
 print("Calculating average RMSE (over entire subset)")
-calculate_rmse("training")
-calculate_rmse("validation")
-calculate_rmse("test")
+calculate_rmse(settings.TRAIN_SUBSET)
+calculate_rmse(settings.VAL_SUBSET)
+calculate_rmse(settings.TEST_SUBSET)
 
 print("--- Execution time: %s seconds ---" % (time.time() - start_time))
