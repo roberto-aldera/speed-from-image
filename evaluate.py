@@ -11,9 +11,12 @@ from network import Net
 
 start_time = time.time()
 
+num_samples_to_eval = 5
 model_path = "/Users/roberto/code/speed-from-image/models/myModel.pt"
-fig_path = "/Users/roberto/code/speed-from-image/evaluation"
-Path(fig_path).mkdir(parents=True, exist_ok=True)
+train_fig_path = "/Users/roberto/code/speed-from-image/evaluation/training_results/"
+val_fig_path = "/Users/roberto/code/speed-from-image/evaluation/validation_results/"
+Path(train_fig_path).mkdir(parents=True, exist_ok=True)
+Path(val_fig_path).mkdir(parents=True, exist_ok=True)
 
 model = Net()
 model.load_state_dict(torch.load(model_path))
@@ -25,23 +28,23 @@ train_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/ima
                               transform=transforms.Compose([ToTensor()]))
 train_loader = DataLoader(train_dataset, batch_size=1,
                           shuffle=False, num_workers=1)
-img_idx = 0
-img = train_loader.dataset[img_idx]['image'].unsqueeze_(0).unsqueeze_(0)
-# print(img.shape)
-speed_labels = train_loader.dataset[img_idx]['speeds']
+for i in range(num_samples_to_eval):
+    img = train_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
+    # print(img.shape)
+    speed_labels = train_loader.dataset[i]['speeds']
 
-speed_estimate = model(img).detach().numpy()
-plt.figure(figsize=(15, 5))
-plt.plot(speed_labels, label="Ground truth")
-plt.plot(speed_estimate[0], label="Prediction")
-plt.xlabel("Index")
-plt.ylabel("Speed (or width)")
-plt.title("Performance on training set example")
-plt.legend()
-plt.grid()
-# print(speed_estimate)
-plt.savefig("/Users/roberto/code/speed-from-image/evaluation/training-performance.png")
-
+    speed_estimate = model(img).detach().numpy()
+    plt.figure(figsize=(15, 5))
+    plt.plot(speed_labels, label="Ground truth")
+    plt.plot(speed_estimate[0], label="Prediction")
+    plt.xlabel("Index")
+    plt.ylabel("Speed (or width)")
+    plt.title("Performance on training set example")
+    plt.legend()
+    plt.grid()
+    plt.savefig("%s%s%i%s" % (train_fig_path, "train-performance_", i, ".png"))
+    plt.close()
+    
 # Validation set
 val_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
                             data_subset_type="validation",
@@ -49,10 +52,9 @@ val_dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/image
 val_loader = DataLoader(val_dataset, batch_size=1,
                         shuffle=False, num_workers=1)
 
-for i in range(1):
-    img_idx = i
-    img = val_loader.dataset[img_idx]['image'].unsqueeze_(0).unsqueeze_(0)
-    speed_labels = val_loader.dataset[img_idx]['speeds']
+for i in range(num_samples_to_eval):
+    img = val_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
+    speed_labels = val_loader.dataset[i]['speeds']
 
     speed_estimate = model(img).detach().numpy()
     plt.figure(figsize=(15, 5))
@@ -63,7 +65,8 @@ for i in range(1):
     plt.title("Performance on validation set example")
     plt.legend()
     plt.grid()
-    plt.savefig("/Users/roberto/code/speed-from-image/evaluation/validation-performance.png")
+    plt.savefig("%s%s%i%s" % (val_fig_path, "val-performance_", i, ".png"))
+    plt.close()
 
 # RMSE comparisons
 print("Average RMSE (over entire subset)")

@@ -34,7 +34,7 @@ criterion = torch.nn.MSELoss()  # mean-squared error for regression
 optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
 losses_over_epochs = []
-for epoch in range(50):  # loop over the dataset multiple times
+for epoch in range(40):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
@@ -58,15 +58,15 @@ for epoch in range(50):  # loop over the dataset multiple times
 #             print(inputs.shape)
 #             print(labels.shape)
 
-torch.save(net.state_dict(), model_path)
+    torch.save(net.state_dict(), model_path)
 
+    plt.figure(figsize=(15, 5))
+    plt.plot(losses_over_epochs, '.-')
+    plt.grid()
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss after each epoch")
+    plt.savefig(fig_path+"/training_loss.png")
+    plt.close()
 print("Finished Training")
-plt.figure(figsize=(15, 5))
-plt.plot(losses_over_epochs, '.-')
-plt.grid()
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.title("Loss after each epoch")
-plt.savefig(fig_path+"/training_loss.png")
-
 print("--- Execution time: %s seconds ---" % (time.time() - start_time))
