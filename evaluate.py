@@ -9,8 +9,6 @@ import time
 import settings
 from dataset_loader import TunnelDataset, ToTensor
 
-start_time = time.time()
-
 
 def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eval):
     dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
@@ -57,6 +55,7 @@ def calculate_rmse(data_subset_type, model):
 
 
 def do_quick_evaluation():
+    start_time = time.time()
     model = settings.MODEL
     model.load_state_dict(torch.load(settings.MODEL_PATH))
     model.eval()
