@@ -43,6 +43,9 @@ for epoch in range(20):  # loop over the dataset multiple times
 
         # forward + backward + optimize
         outputs = net(inputs)
+        # print("Inputs:", inputs.shape)
+        # print("Labels:", labels.shape)
+        # print("Outputs:", outputs.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -54,8 +57,6 @@ for epoch in range(20):  # loop over the dataset multiple times
                   (epoch + 1, batch_idx + 1, running_loss / 1))
             losses_over_epochs.append(running_loss)
             running_loss = 0.0
-    #             print(inputs.shape)
-    #             print(labels.shape)
 
     torch.save(net.state_dict(), settings.MODEL_PATH)
 
