@@ -77,11 +77,12 @@ def generate_and_save_samples(data_ratio, data_subset_type):
 
     np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_speed_labels.csv")), speed_labels, delimiter=",",
                fmt="%10.5f")
-    print("Generated", num_samples, data_subset_type, "samples, written to:", split_data_folder)
+    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.IMAGE_DIMENSION,
+          "and written to:", split_data_folder)
 
 
 generate_and_save_samples(settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
 generate_and_save_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
 generate_and_save_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
 
-print("--- Execution time: %s seconds ---" % (time.time() - start_time))
+print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))

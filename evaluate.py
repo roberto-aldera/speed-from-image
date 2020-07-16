@@ -12,7 +12,7 @@ from dataset_loader import TunnelDataset, ToTensor
 start_time = time.time()
 
 
-def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
+def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eval):
     dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
@@ -38,7 +38,7 @@ def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
         plt.close()
 
 
-def calculate_rmse(data_subset_type):
+def calculate_rmse(data_subset_type, model):
     dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
@@ -56,20 +56,30 @@ def calculate_rmse(data_subset_type):
     print(cumulative_rmse / len(data_loader))
 
 
-model = settings.MODEL
-model.load_state_dict(torch.load(settings.MODEL_PATH))
-model.eval()
-print("Loaded model from", settings.MODEL_PATH, "-> ready to evaluate.")
+def do_quick_evaluation():
+    model = settings.MODEL
+    model.load_state_dict(torch.load(settings.MODEL_PATH))
+    model.eval()
+    print("Loaded model from", settings.MODEL_PATH, "-> ready to evaluate.")
 
-print("Generating evaluation plots...")
-num_samples = 5
-generate_subset_evaluation_plots(settings.TRAIN_SUBSET, num_samples)
-generate_subset_evaluation_plots(settings.VAL_SUBSET, num_samples)
-generate_subset_evaluation_plots(settings.TEST_SUBSET, num_samples)
+    print("Generating evaluation plots...")
+    num_samples = 5
+    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, num_samples)
 
-print("Calculating average RMSE (over entire subset)")
-calculate_rmse(settings.TRAIN_SUBSET)
-calculate_rmse(settings.VAL_SUBSET)
-calculate_rmse(settings.TEST_SUBSET)
+    print("Calculating average RMSE (over entire subset)")
+    calculate_rmse(settings.TRAIN_SUBSET, model)
+    calculate_rmse(settings.VAL_SUBSET, model)
+    calculate_rmse(settings.TEST_SUBSET, model)
 
-print("--- Execution time: %s seconds ---" % (time.time() - start_time))
+    print("--- Evaluation execution time: %s seconds ---" % (time.time() - start_time))
+
+
+def main():
+    # Define a main loop to run and show some example data if this script is run as main
+    do_quick_evaluation()
+
+
+if __name__ == "__main__":
+    main()

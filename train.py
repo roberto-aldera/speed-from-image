@@ -7,6 +7,7 @@ import time
 
 import settings
 from dataset_loader import TunnelDataset, ToTensor
+from evaluate import do_quick_evaluation
 
 start_time = time.time()
 
@@ -69,4 +70,6 @@ for epoch in range(20):  # loop over the dataset multiple times
     plt.savefig(settings.RESULTS_DIR + "/training_loss.png")
     plt.close()
 print("Finished Training")
-print("--- Execution time: %s seconds ---" % (time.time() - start_time))
+print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
+
+do_quick_evaluation()
