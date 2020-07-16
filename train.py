@@ -7,7 +7,6 @@ import time
 
 import settings
 from dataset_loader import TunnelDataset, ToTensor
-from network import Net
 
 start_time = time.time()
 
@@ -28,7 +27,7 @@ train_loader = DataLoader(train_dataset, batch_size=16,
 
 torch.manual_seed(0)
 learning_rate = 1e-3
-net = Net()
+net = settings.MODEL
 criterion = torch.nn.MSELoss()  # mean-squared error for regression
 optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
@@ -65,7 +64,8 @@ for epoch in range(20):  # loop over the dataset multiple times
     plt.grid()
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.title("Loss after each epoch")
+    plt.title("%s%s%s%s" % ("Loss after each epoch, model = ", settings.ARCHITECTURE_TYPE, ", batch size = ",
+                            train_loader.batch_size))
     plt.savefig(settings.RESULTS_DIR + "/training_loss.png")
     plt.close()
 print("Finished Training")

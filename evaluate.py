@@ -8,13 +8,12 @@ import time
 
 import settings
 from dataset_loader import TunnelDataset, ToTensor
-from network import Net
 
 start_time = time.time()
 
 
 def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
-    dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
+    dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
@@ -40,7 +39,7 @@ def generate_subset_evaluation_plots(data_subset_type, num_samples_to_eval):
 
 
 def calculate_rmse(data_subset_type):
-    dataset = TunnelDataset(root_dir="/Users/roberto/code/speed-from-image/images/",
+    dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
@@ -57,7 +56,7 @@ def calculate_rmse(data_subset_type):
     print(cumulative_rmse / len(data_loader))
 
 
-model = Net()
+model = settings.MODEL
 model.load_state_dict(torch.load(settings.MODEL_PATH))
 model.eval()
 print("Loaded model from", settings.MODEL_PATH, "-> ready to evaluate.")

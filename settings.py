@@ -1,10 +1,6 @@
 # Project-specific settings live here.
-
-# Paths
-ROOT_DIR = "/Users/roberto/code/speed-from-image/"
-IMAGE_DIR = ROOT_DIR + "images/"
-MODEL_PATH = ROOT_DIR + "models/myModel.pt"
-RESULTS_DIR = ROOT_DIR + "evaluation/"
+from network import Net
+from resnet import resnet18
 
 # data subset names
 TRAIN_SUBSET = "training"
@@ -21,3 +17,21 @@ MIN_WIDTH, MAX_WIDTH = 8, 16
 MIN_LENGTH, MAX_LENGTH = 15, 20
 WALL_WIDTH = 2
 SPEED_NOISE_LEVEL = 0.25
+
+# Models
+LENET_STR = "LeNet"
+RESNET_STR = "ResNet"
+
+ARCHITECTURE_TYPE = LENET_STR
+MODEL = None
+
+if ARCHITECTURE_TYPE == LENET_STR:
+    MODEL = Net()
+elif ARCHITECTURE_TYPE == RESNET_STR:
+    MODEL = resnet18()
+
+# Paths
+ROOT_DIR = "/Users/roberto/code/speed-from-image/"
+IMAGE_DIR = ROOT_DIR + "images/"
+MODEL_PATH = ROOT_DIR + "models/" + ARCHITECTURE_TYPE + ".pt"
+RESULTS_DIR = ROOT_DIR + "evaluation/" + ARCHITECTURE_TYPE + "/"
