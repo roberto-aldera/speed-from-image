@@ -31,7 +31,7 @@ elif ARCHITECTURE_TYPE == RESNET_STR:
     MODEL = resnet18()
 
 # Paths
-ROOT_DIR = "/Users/roberto/code/speed-from-image/"
+ROOT_DIR = "/workspace/code/speed-from-image/"
 IMAGE_DIR = ROOT_DIR + "images/"
 MODEL_PATH = ROOT_DIR + "models/" + ARCHITECTURE_TYPE + ".pt"
 RESULTS_DIR = ROOT_DIR + "evaluation/" + ARCHITECTURE_TYPE + "/"
