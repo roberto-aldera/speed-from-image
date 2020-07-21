@@ -60,7 +60,7 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
         cart_img = radar_sweep.GetCartesian(pixel_width=width, pixel_height=height, resolution=res,
                                             method='cv2', verbose=False)
         img = Image.fromarray(cart_img.astype(np.uint8), 'L')
-        img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", scan_index, ".png"))
+        img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", i, ".png"))
         img.close()
 
         x_vals = np.zeros(settings.POSE_WINDOW_SIZE)
