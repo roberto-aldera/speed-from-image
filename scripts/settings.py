@@ -7,12 +7,14 @@ TRAIN_SUBSET = "training"
 VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
-# Dataset generation
+# General dataset parameters
 TOTAL_SAMPLES = 1000
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
 IMAGE_DIMENSION = 64
+
+# Tunnel parameters
 MIN_WIDTH, MAX_WIDTH = 8, 16
 MIN_LENGTH, MAX_LENGTH = 15, 20
 WALL_WIDTH = 2
@@ -31,7 +33,13 @@ elif ARCHITECTURE_TYPE == RESNET_STR:
     MODEL = resnet18()
 
 # Paths
-ROOT_DIR = "/workspace/code/speed-from-image/"
-IMAGE_DIR = ROOT_DIR + "images/"
+ROOT_DIR = "/workspace/data/speed-from-image/"
+TOY_IMAGE_DIR = ROOT_DIR + "toy-images/"
+RADAR_IMAGE_DIR = ROOT_DIR + "radar-images/"
 MODEL_PATH = ROOT_DIR + "models/" + ARCHITECTURE_TYPE + ".pt"
 RESULTS_DIR = ROOT_DIR + "evaluation/" + ARCHITECTURE_TYPE + "/"
+
+RADAR_DATASET_PATH = "/workspace/data/RadarDataLogs/2017-08-18-11-21-04-oxford-10k-with-radar-1/logs/radar/cts350x/" \
+                      "2017-08-18-10-21-06"
+RAW_SCAN_MONOLITHIC = RADAR_DATASET_PATH + "/cts350x_raw_scan.monolithic"
+RADAR_CONFIG = RADAR_DATASET_PATH + "/cts350x_config.monolithic"

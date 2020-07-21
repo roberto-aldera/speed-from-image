@@ -13,7 +13,7 @@ start_time = time.time()
 
 Path(settings.RESULTS_DIR).mkdir(parents=True, exist_ok=True)
 
-train_dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
+train_dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                               data_subset_type=settings.TRAIN_SUBSET,
                               transform=transforms.Compose([ToTensor()]))
 

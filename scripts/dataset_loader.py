@@ -54,7 +54,7 @@ class ToTensor(object):
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     tunnel_dataset = TunnelDataset(
-        root_dir=settings.IMAGE_DIR,
+        root_dir=settings.TOY_IMAGE_DIR,
         data_subset_type=settings.TRAIN_SUBSET)
     tunnels_idx = 0
     tunnel = tunnel_dataset[tunnels_idx]

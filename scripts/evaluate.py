@@ -11,7 +11,7 @@ from dataset_loader import TunnelDataset, ToTensor
 
 
 def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eval):
-    dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
+    dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
@@ -37,7 +37,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
 
 
 def calculate_rmse(data_subset_type, model):
-    dataset = TunnelDataset(root_dir=settings.IMAGE_DIR,
+    dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                             data_subset_type=data_subset_type,
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
