@@ -8,7 +8,7 @@ VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
 # General dataset parameters
-TOTAL_SAMPLES = 100
+TOTAL_SAMPLES = 1000
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
@@ -22,6 +22,7 @@ SPEED_NOISE_LEVEL = 0.25
 
 # Radar scan dataset parameters
 RADAR_IMAGE_DIMENSION = 64
+RADAR_RESOLUTION_SCALING_FACTOR = 4
 POSE_WINDOW_SIZE = 3
 
 # Models

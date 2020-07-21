@@ -33,7 +33,8 @@ def get_poses_from_file():
     return ro_se3s, ro_timestamps
 
 
-def export_radar_images(ro_se3s, ro_timestamps, data_ratio, data_subset_type):
+def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index, data_subset_type):
+    print("Generating", data_subset_type, "data, size =", num_samples)
     from mrg.logging.indexed_monolithic import IndexedMonolithic
     from mrg.adaptors.radar import pbNavtechRawConfigToPython, pbNavtechRawScanToPython
 
@@ -46,18 +47,13 @@ def export_radar_images(ro_se3s, ro_timestamps, data_ratio, data_subset_type):
     config_pb, name, timestamp = radar_config_mono[0]
     config = pbNavtechRawConfigToPython(config_pb)
     radar_mono = IndexedMonolithic(settings.RAW_SCAN_MONOLITHIC)
-
-    print("Length of ro_se3s:", len(ro_se3s))
-    print("Length of ro_timestamps:", len(ro_timestamps))
-    print("Length of scans monolithic:", len(radar_mono))
-
-    width, height, res = settings.RADAR_IMAGE_DIMENSION, settings.RADAR_IMAGE_DIMENSION, config.bin_size_or_resolution
-    start_index = 0
-    num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
+    width, height, res = (settings.RADAR_IMAGE_DIMENSION,
+                          settings.RADAR_IMAGE_DIMENSION,
+                          config.bin_size_or_resolution * settings.RADAR_RESOLUTION_SCALING_FACTOR)
     x_vals_labels = []
 
     for i in range(num_samples):
-        scan_index = start_index + i
+        scan_index = subset_start_index + i
         pb_raw_scan, name_scan, _ = radar_mono[scan_index]
         radar_sweep = pbNavtechRawScanToPython(pb_raw_scan, config)
 
@@ -81,7 +77,19 @@ def main():
     # Define a main loop to run and show some example data if this script is run as main
     print("Starting dataset generation...")
     ro_se3s, ro_timestamps = get_poses_from_file()
-    export_radar_images(ro_se3s, ro_timestamps, settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
+    total_poses_to_process = settings.TOTAL_SAMPLES
+    rolling_scan_index = 0
+
+    num_training_samples = int(total_poses_to_process * settings.TRAIN_RATIO)
+    export_radar_images(ro_se3s, ro_timestamps, num_training_samples, rolling_scan_index, settings.TRAIN_SUBSET)
+    rolling_scan_index += num_training_samples
+
+    num_validation_samples = int(total_poses_to_process * settings.VAL_RATIO)
+    export_radar_images(ro_se3s, ro_timestamps, num_validation_samples, rolling_scan_index, settings.VAL_SUBSET)
+    rolling_scan_index += num_validation_samples
+
+    num_test_samples = int(total_poses_to_process * settings.TEST_RATIO)
+    export_radar_images(ro_se3s, ro_timestamps, num_test_samples, rolling_scan_index, settings.TEST_SUBSET)
 
 
 if __name__ == "__main__":
