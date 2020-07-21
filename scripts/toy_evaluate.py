@@ -16,7 +16,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
                             transform=transforms.Compose([ToTensor()]))
     data_loader = DataLoader(dataset, batch_size=1,
                              shuffle=False, num_workers=1)
-    subset_fig_path = settings.RESULTS_DIR + data_subset_type + "/"
+    subset_fig_path = settings.TOY_RESULTS_DIR + data_subset_type + "/"
     Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
 
     for i in range(num_samples_to_eval):
@@ -57,9 +57,10 @@ def calculate_rmse(data_subset_type, model):
 def do_quick_evaluation():
     start_time = time.time()
     model = settings.MODEL
-    model.load_state_dict(torch.load(settings.MODEL_PATH))
+    model.load_state_dict(torch.load("%s%s%s" % (settings.TOY_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt")))
     model.eval()
-    print("Loaded model from", settings.MODEL_PATH, "-> ready to evaluate.")
+    print("Loaded model from", "%s%s%s" % (settings.TOY_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"),
+          "-> ready to evaluate.")
 
     print("Generating evaluation plots...")
     num_samples = 5

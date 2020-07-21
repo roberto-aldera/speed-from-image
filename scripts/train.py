@@ -6,22 +6,23 @@ from pathlib import Path
 import time
 
 import settings
-from toy_dataset_loader import TunnelDataset, ToTensor
-from toy_evaluate import do_quick_evaluation
+from dataset_loader import RadarDataset, ToTensor
+
+# from evaluate import do_quick_evaluation
 
 start_time = time.time()
 
-Path(settings.TOY_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
-Path(settings.TOY_MODEL_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.RESULTS_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
-train_dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
-                              data_subset_type=settings.TRAIN_SUBSET,
-                              transform=transforms.Compose([ToTensor()]))
+train_dataset = RadarDataset(root_dir=settings.RADAR_IMAGE_DIR,
+                             data_subset_type=settings.TRAIN_SUBSET,
+                             transform=transforms.Compose([ToTensor()]))
 
 print("Training set size:", len(train_dataset))
 
 sample = train_dataset[0]
-print(0, sample['image'].size(), sample['speeds'].size())
+print(0, sample['image'].size(), sample['x_vals'].size())
 
 # Training starts here
 train_loader = DataLoader(train_dataset, batch_size=16,
@@ -38,7 +39,7 @@ for epoch in range(30):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
-        labels = sample_batched['speeds'].to(torch.float32)
+        labels = sample_batched['x_vals'].to(torch.float32)
         # zero the parameter gradients
         optimizer.zero_grad()
 
@@ -59,7 +60,7 @@ for epoch in range(30):  # loop over the dataset multiple times
             losses_over_epochs.append(running_loss)
             running_loss = 0.0
 
-    torch.save(net.state_dict(), "%s%s%s" % (settings.TOY_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"))
+    torch.save(net.state_dict(), "%s%s%s" % (settings.MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"))
 
     plt.figure(figsize=(15, 5))
     plt.plot(losses_over_epochs, '.-')
@@ -68,9 +69,9 @@ for epoch in range(30):  # loop over the dataset multiple times
     plt.ylabel("Loss")
     plt.title("%s%s%s%s" % ("Loss after each epoch, model = ", settings.ARCHITECTURE_TYPE, ", batch size = ",
                             train_loader.batch_size))
-    plt.savefig(settings.TOY_RESULTS_DIR + "/training_loss.png")
+    plt.savefig(settings.RESULTS_DIR + "/training_loss.png")
     plt.close()
 print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-do_quick_evaluation()
+# do_quick_evaluation()

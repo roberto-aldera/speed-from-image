@@ -21,7 +21,7 @@ WALL_WIDTH = 2
 SPEED_NOISE_LEVEL = 0.25
 
 # Radar scan dataset parameters
-RADAR_IMAGE_DIMENSION = 256
+RADAR_IMAGE_DIMENSION = 64
 POSE_WINDOW_SIZE = 3
 
 # Models
@@ -38,10 +38,13 @@ elif ARCHITECTURE_TYPE == RESNET_STR:
 
 # Paths
 ROOT_DIR = "/workspace/data/speed-from-image/"
-TOY_IMAGE_DIR = ROOT_DIR + "toy-images/"
 RADAR_IMAGE_DIR = ROOT_DIR + "radar-images/"
-MODEL_PATH = ROOT_DIR + "models/" + ARCHITECTURE_TYPE + ".pt"
+MODEL_DIR = ROOT_DIR + "models/"
 RESULTS_DIR = ROOT_DIR + "evaluation/" + ARCHITECTURE_TYPE + "/"
+
+TOY_IMAGE_DIR = ROOT_DIR + "toy-images/"
+TOY_MODEL_DIR = ROOT_DIR + "toy-models/"
+TOY_RESULTS_DIR = ROOT_DIR + "toy-evaluation/" + ARCHITECTURE_TYPE + "/"
 
 RADAR_DATASET_PATH = "/workspace/data/RadarDataLogs/2017-08-18-11-21-04-oxford-10k-with-radar-1/logs/radar/cts350x/" \
                       "2017-08-18-10-21-06"
