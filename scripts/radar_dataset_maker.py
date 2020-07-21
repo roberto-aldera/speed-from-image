@@ -1,5 +1,7 @@
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 import time
 from pathlib import Path
 import settings
@@ -30,15 +32,13 @@ def export_radar_images():
 
     for i in range(export_total):
         scan_index = start_index + i
-        pbRawScan, name_scan, timestamp_scan = radar_mono[scan_index]
-        radar_sweep = pbNavtechRawScanToPython(pbRawScan, config)
+        pb_raw_scan, name_scan, timestamp_scan = radar_mono[scan_index]
+        radar_sweep = pbNavtechRawScanToPython(pb_raw_scan, config)
         cart_img = radar_sweep.GetCartesian(pixel_width=width, pixel_height=height, resolution=res,
                                             method='cv2', verbose=False)
-
-        plt.figure()
-        plt.imshow(cart_img)
-        plt.savefig("%s%s%i%s" % (settings.RADAR_IMAGE_DIR, "radar_frame-", scan_index, ".png"), bbox_inches='tight')
-        plt.close()
+        img = Image.fromarray(cart_img.astype(np.uint8), 'L')
+        img.save("%s%s%i%s" % (settings.RADAR_IMAGE_DIR, "radar_frame-", scan_index, ".png"))
+        img.close()
     print("--- Radar image generation execution time: %s seconds ---" % (time.time() - start_time))
 
 
