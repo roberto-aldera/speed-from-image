@@ -33,14 +33,14 @@ def decomposition(leftovers, min_val, max_val):
 
 
 def generate_and_save_samples(data_ratio, data_subset_type):
-    start = np.array([0, int(settings.IMAGE_DIMENSION / 2)])
-    w, h = settings.IMAGE_DIMENSION, settings.IMAGE_DIMENSION
+    start = np.array([0, int(settings.TOY_IMAGE_DIMENSION / 2)])
+    w, h = settings.TOY_IMAGE_DIMENSION, settings.TOY_IMAGE_DIMENSION
     speed_labels = []
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
     split_data_folder = "%s%s%s" % (settings.TOY_IMAGE_DIR, data_subset_type, "/")
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
     for idx in range(num_samples):
-        width = np.zeros(settings.IMAGE_DIMENSION, dtype=np.uint8)
+        width = np.zeros(settings.TOY_IMAGE_DIMENSION, dtype=np.uint8)
         data = np.zeros((h, w), dtype=np.uint8)
         wall_brightness = randint(150, 255)  # vary the wall brightness (but keep same for whole image)
 
@@ -52,7 +52,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         gauss = gauss.reshape(row, col).astype(np.uint8)
         data += gauss
 
-        step_vals = list(decomposition(settings.IMAGE_DIMENSION, settings.MIN_LENGTH,
+        step_vals = list(decomposition(settings.TOY_IMAGE_DIMENSION, settings.MIN_LENGTH,
                                        settings.MAX_LENGTH))  # generate random partitions
         total = 0
 
@@ -60,7 +60,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             width[total:total + step_vals[i]] = randrange(settings.MIN_WIDTH, settings.MAX_WIDTH)
             total += step_vals[i]
 
-        for i in range(settings.IMAGE_DIMENSION):
+        for i in range(settings.TOY_IMAGE_DIMENSION):
             # left wall
             data[i, start[1] + width[i]:start[1] + width[i] + settings.WALL_WIDTH] = wall_brightness
             # right wall
@@ -70,14 +70,14 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
 
         # Add noise to width data and treat this as speed
-        speed = np.zeros(settings.IMAGE_DIMENSION)
+        speed = np.zeros(settings.TOY_IMAGE_DIMENSION)
         for i in range(len(speed)):
             speed[i] = width[i] + uniform(-settings.SPEED_NOISE_LEVEL, settings.SPEED_NOISE_LEVEL)
         speed_labels.append(speed)
 
     np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_speed_labels.csv")), speed_labels, delimiter=",",
                fmt="%10.5f")
-    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.IMAGE_DIMENSION,
+    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.TOY_IMAGE_DIMENSION,
           "and written to:", split_data_folder)
 
 
