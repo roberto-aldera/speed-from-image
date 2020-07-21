@@ -6,8 +6,8 @@ from pathlib import Path
 import time
 
 import settings
-from dataset_loader import TunnelDataset, ToTensor
-from evaluate import do_quick_evaluation
+from toy_dataset_loader import TunnelDataset, ToTensor
+from toy_evaluate import do_quick_evaluation
 
 start_time = time.time()
 

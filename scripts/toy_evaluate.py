@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 
 import settings
-from dataset_loader import TunnelDataset, ToTensor
+from toy_dataset_loader import TunnelDataset, ToTensor
 
 
 def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eval):

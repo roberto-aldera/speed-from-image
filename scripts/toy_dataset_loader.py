@@ -7,8 +7,8 @@ from torch.utils.data import Dataset
 import settings
 
 
-class RadarDataset(Dataset):
-    """Radar dataset."""
+class TunnelDataset(Dataset):
+    """Tunnel dataset."""
 
     def __init__(self, root_dir, data_subset_type, transform=None):
         """
@@ -18,22 +18,22 @@ class RadarDataset(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.x_vals_frame = pd.read_csv(root_dir + data_subset_type + "/" + data_subset_type + "_x_vals_labels.csv",
+        self.speeds_frame = pd.read_csv(root_dir + data_subset_type + "/" + data_subset_type + "_speed_labels.csv",
                                         header=None)
         self.root_dir = root_dir + data_subset_type + "/"
         self.data_subset_type = data_subset_type
         self.transform = transform
 
     def __len__(self):
-        return len(self.x_vals_frame)
+        return len(self.speeds_frame)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + ".png"
         image = np.array(Image.open(img_name))
-        x_vals = np.array(self.x_vals_frame.iloc[idx])
-        sample = {'image': image, 'x_vals': x_vals}
+        speeds = np.array(self.speeds_frame.iloc[idx])
+        sample = {'image': image, 'speeds': speeds}
 
         if self.transform:
             sample = self.transform(sample)
@@ -45,26 +45,26 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        image, x_vals = sample['image'], sample['x_vals']
+        image, speeds = sample['image'], sample['speeds']
 
         return {'image': torch.from_numpy(image),
-                'x_vals': torch.from_numpy(x_vals)}
+                'speeds': torch.from_numpy(speeds)}
 
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
-    radar_dataset = RadarDataset(
-        root_dir=settings.RADAR_IMAGE_DIR,
+    tunnel_dataset = TunnelDataset(
+        root_dir=settings.TOY_IMAGE_DIR,
         data_subset_type=settings.TRAIN_SUBSET)
-    idx = 0
-    radar_scan = radar_dataset[idx]
+    tunnels_idx = 0
+    tunnel = tunnel_dataset[tunnels_idx]
 
-    print(idx, radar_scan['image'].shape, radar_scan['x_vals'].shape)
+    print(tunnels_idx, tunnel['image'].shape, tunnel['speeds'].shape)
 
     plt.figure(figsize=(1, 1))
-    plt.imshow(radar_scan['image'], cmap='gray', vmin=0, vmax=255)
+    plt.imshow(tunnel['image'], cmap='gray', vmin=0, vmax=255)
     plt.figure(figsize=(5, 1))
-    plt.plot(radar_scan['x_vals'])
+    plt.plot(tunnel['speeds'])
     plt.show()
 
 
