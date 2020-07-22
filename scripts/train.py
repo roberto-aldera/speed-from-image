@@ -8,7 +8,7 @@ import time
 import settings
 from dataset_loader import RadarDataset, ToTensor
 
-# from evaluate import do_quick_evaluation
+from evaluate import do_quick_evaluation
 
 start_time = time.time()
 
@@ -74,4 +74,4 @@ for epoch in range(30):  # loop over the dataset multiple times
 print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-# do_quick_evaluation()
+do_quick_evaluation()
