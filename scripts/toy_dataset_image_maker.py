@@ -80,6 +80,11 @@ def generate_and_save_samples(data_ratio, data_subset_type):
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.TOY_IMAGE_DIMENSION,
           "and written to:", split_data_folder)
 
+    speed_mean = np.mean(np.array(speed_labels))
+    speed_std_dev = np.std(np.array(speed_labels))
+    print("Speed mean for", data_subset_type, "->", speed_mean)
+    print("Speed std dev for", data_subset_type, "->", speed_std_dev)
+
 
 generate_and_save_samples(settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
 generate_and_save_samples(settings.VAL_RATIO, settings.VAL_SUBSET)

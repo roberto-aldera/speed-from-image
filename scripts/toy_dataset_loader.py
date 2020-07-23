@@ -51,6 +51,18 @@ class ToTensor(object):
                 'speeds': torch.from_numpy(speeds)}
 
 
+class Normalise(object):
+    """Perform normalisation."""
+
+    def __call__(self, sample):
+        image, speeds = sample['image'], sample['speeds']
+        mean = settings.TOY_SPEED_MEAN
+        std_dev = settings.TOY_SPEED_STD_DEV
+        scaled_speeds = (speeds - mean) / std_dev
+        return {'image': image,
+                'speeds': scaled_speeds}
+
+
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     tunnel_dataset = TunnelDataset(
@@ -61,11 +73,14 @@ def main():
 
     print(tunnels_idx, tunnel['image'].shape, tunnel['speeds'].shape)
 
-    plt.figure(figsize=(1, 1))
-    plt.imshow(tunnel['image'], cmap='gray', vmin=0, vmax=255)
-    plt.figure(figsize=(5, 1))
-    plt.plot(tunnel['speeds'])
-    plt.show()
+    # plt.figure(figsize=(1, 1))
+    # plt.imshow(tunnel['image'], cmap='gray', vmin=0, vmax=255)
+    plt.figure(figsize=(10, 5))
+    plt.plot(tunnel['speeds'], '.-')
+    plt.ylim(-1, 20)
+    plt.grid()
+    plt.savefig("/workspace/Desktop/tmp.png")
+    plt.close()
 
 
 if __name__ == "__main__":

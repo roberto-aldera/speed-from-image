@@ -7,13 +7,16 @@ from pathlib import Path
 import time
 
 import settings
-from toy_dataset_loader import TunnelDataset, ToTensor
+from toy_dataset_loader import TunnelDataset, ToTensor, Normalise
+
+# data_transform = transforms.Compose([ToTensor(), Normalise()])
+data_transform_for_evaluation = transforms.Compose([ToTensor()])
 
 
 def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eval):
     dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                             data_subset_type=data_subset_type,
-                            transform=transforms.Compose([ToTensor()]))
+                            transform=data_transform_for_evaluation)
     data_loader = DataLoader(dataset, batch_size=1,
                              shuffle=False, num_workers=1)
     subset_fig_path = settings.TOY_RESULTS_DIR + data_subset_type + "/"
@@ -23,7 +26,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
         img = data_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
         speed_labels = data_loader.dataset[i]['speeds']
 
-        speed_estimate = model(img).detach().numpy()
+        speed_estimate = ((model(img).detach().numpy()) * settings.TOY_SPEED_STD_DEV) + settings.TOY_SPEED_MEAN
         plt.figure(figsize=(15, 5))
         plt.plot(speed_labels, label="Ground truth")
         plt.plot(speed_estimate[0], label="Prediction")
@@ -39,7 +42,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
 def calculate_rmse(data_subset_type, model):
     dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                             data_subset_type=data_subset_type,
-                            transform=transforms.Compose([ToTensor()]))
+                            transform=data_transform_for_evaluation)
     data_loader = DataLoader(dataset, batch_size=1,
                              shuffle=False, num_workers=1)
     print("RMSE for", data_subset_type, "set:")
@@ -48,7 +51,7 @@ def calculate_rmse(data_subset_type, model):
     for i in range(len(data_loader)):
         img = data_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
         speed_labels = data_loader.dataset[i]['speeds'].numpy()
-        speed_estimate = model(img).detach().numpy()
+        speed_estimate = ((model(img).detach().numpy()) * settings.TOY_SPEED_STD_DEV) + settings.TOY_SPEED_MEAN
         rmse = np.sqrt(np.mean(np.square(speed_labels - speed_estimate) / len(speed_labels)))
         cumulative_rmse += rmse
     print(cumulative_rmse / len(data_loader))

@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 
 import settings
-from toy_dataset_loader import TunnelDataset, ToTensor
+from toy_dataset_loader import TunnelDataset, ToTensor, Normalise
 from toy_evaluate import do_quick_evaluation
 
 start_time = time.time()
@@ -14,9 +14,11 @@ start_time = time.time()
 Path(settings.TOY_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
 Path(settings.TOY_MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
+data_transform_for_training = transforms.Compose([ToTensor(), Normalise()])
+
 train_dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
                               data_subset_type=settings.TRAIN_SUBSET,
-                              transform=transforms.Compose([ToTensor()]))
+                              transform=data_transform_for_training)
 
 print("Training set size:", len(train_dataset))
 
@@ -28,13 +30,13 @@ train_loader = DataLoader(train_dataset, batch_size=16,
                           shuffle=True, num_workers=1)
 
 torch.manual_seed(0)
-learning_rate = 1e-3
+learning_rate = 1e-4
 net = settings.MODEL
 criterion = torch.nn.MSELoss()  # mean-squared error for regression
 optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
 losses_over_epochs = []
-for epoch in range(30):  # loop over the dataset multiple times
+for epoch in range(10):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
