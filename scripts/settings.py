@@ -2,13 +2,21 @@
 from network import Net
 from resnet import resnet18
 
+import torch
+import numpy as np
+import random
+# Ensure reproducibility
+torch.manual_seed(0)
+np.random.seed(0)
+random.seed(0)
+
 # data subset names
 TRAIN_SUBSET = "training"
 VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
 # General dataset parameters
-TOTAL_SAMPLES = 1000
+TOTAL_SAMPLES = 10
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
