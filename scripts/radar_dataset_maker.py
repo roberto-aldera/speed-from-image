@@ -40,8 +40,6 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
     from mrg.logging.indexed_monolithic import IndexedMonolithic
     from mrg.adaptors.radar import pbNavtechRawConfigToPython, pbNavtechRawScanToPython
 
-    start_time = time.time()
-
     split_data_folder = "%s%s%s" % (settings.RADAR_IMAGE_DIR, data_subset_type, "/")
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
 
@@ -69,7 +67,7 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
                                          stride=1)
             pooled_image = pooling(tensor_image)
             pooled_image = torch.nn.Upsample(size=(settings.RADAR_IMAGE_DIMENSION, settings.RADAR_IMAGE_DIMENSION),
-                                             mode='bilinear')(pooled_image).int()
+                                             mode='bilinear', align_corners=False)(pooled_image).int()
             img = transforms.ToPILImage()(pooled_image.squeeze_(0)).convert("L")
         else:
             width, height, res = (settings.RADAR_IMAGE_DIMENSION,
@@ -89,12 +87,20 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
         x_vals_labels.append(x_vals)
     np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_x_vals_labels.csv")), x_vals_labels, delimiter=",",
                fmt="%10.5f")
-    print("--- Radar image and pose generation execution time: %s seconds ---" % (time.time() - start_time))
+    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.RADAR_IMAGE_DIMENSION,
+          "and written to:", split_data_folder)
+
+    x_vals_mean = np.mean(np.array(x_vals_labels))
+    x_vals_std_dev = np.std(np.array(x_vals_labels))
+    print("X_val mean for", data_subset_type, "->", x_vals_mean)
+    print("X_val std dev for", data_subset_type, "->", x_vals_std_dev)
 
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     print("Starting dataset generation...")
+    start_time = time.time()
+
     ro_se3s, ro_timestamps = get_poses_from_file()
     total_poses_to_process = settings.TOTAL_SAMPLES
     rolling_scan_index = 0
@@ -109,6 +115,8 @@ def main():
 
     num_test_samples = int(total_poses_to_process * settings.TEST_RATIO)
     export_radar_images(ro_se3s, ro_timestamps, num_test_samples, rolling_scan_index, settings.TEST_SUBSET)
+
+    print("--- Radar image and pose generation execution time: %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
