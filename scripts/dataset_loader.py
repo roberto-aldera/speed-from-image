@@ -51,6 +51,18 @@ class ToTensor(object):
                 'x_vals': torch.from_numpy(x_vals)}
 
 
+class Normalise(object):
+    """Perform normalisation."""
+
+    def __call__(self, sample):
+        image, x_vals = sample['image'], sample['x_vals']
+        mean = settings.ODOMETRY_SPEED_MEAN
+        std_dev = settings.ODOMETRY_SPEED_STD_DEV
+        scaled_x_vals = (x_vals - mean) / std_dev
+        return {'image': image,
+                'x_vals': scaled_x_vals}
+
+
 def main():
     # Define a main loop to run and show some example data if this script is run as main
     radar_dataset = RadarDataset(
@@ -61,11 +73,14 @@ def main():
 
     print(idx, radar_scan['image'].shape, radar_scan['x_vals'].shape)
 
-    plt.figure(figsize=(1, 1))
-    plt.imshow(radar_scan['image'], cmap='gray', vmin=0, vmax=255)
-    plt.figure(figsize=(5, 1))
-    plt.plot(radar_scan['x_vals'])
-    plt.show()
+    # plt.figure(figsize=(1, 1))
+    # plt.imshow(radar_scan['image'], cmap='gray', vmin=0, vmax=255)
+    plt.figure(figsize=(10, 5))
+    plt.plot(radar_scan['x_vals'], '.-')
+    # plt.ylim(-1, 5)
+    plt.grid()
+    plt.savefig("/workspace/Desktop/radar-speeds-0.png")
+    plt.close()
 
 
 if __name__ == "__main__":

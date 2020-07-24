@@ -13,7 +13,7 @@ class LeNet(nn.Module):
         # an affine operation: y = Wx + b
         self.fc1 = nn.Linear(3136, 1200)  # 6*6 from image dimension
         self.fc2 = nn.Linear(1200, 300)
-        self.fc3 = nn.Linear(300, 64)
+        self.fc3 = nn.Linear(300, 10)
 
     def forward(self, x):
         # Max pooling over a (2, 2) window
