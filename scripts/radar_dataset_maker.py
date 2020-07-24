@@ -1,9 +1,11 @@
 import sys
 import numpy as np
 from PIL import Image
+from torchvision import transforms
 import time
 from pathlib import Path
 import settings
+import torch
 
 sys.path.insert(-1, "/workspace/code/corelibs/src/tools-python")
 sys.path.insert(-1, "/workspace/code/corelibs/build/datatypes")
@@ -47,9 +49,7 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
     config_pb, name, timestamp = radar_config_mono[0]
     config = pbNavtechRawConfigToPython(config_pb)
     radar_mono = IndexedMonolithic(settings.RAW_SCAN_MONOLITHIC)
-    width, height, res = (settings.RADAR_IMAGE_DIMENSION,
-                          settings.RADAR_IMAGE_DIMENSION,
-                          config.bin_size_or_resolution * settings.RADAR_RESOLUTION_SCALING_FACTOR)
+
     x_vals_labels = []
 
     for i in range(num_samples):
@@ -57,9 +57,28 @@ def export_radar_images(ro_se3s, ro_timestamps, num_samples, subset_start_index,
         pb_raw_scan, name_scan, _ = radar_mono[scan_index]
         radar_sweep = pbNavtechRawScanToPython(pb_raw_scan, config)
 
-        cart_img = radar_sweep.GetCartesian(pixel_width=width, pixel_height=height, resolution=res,
-                                            method='cv2', verbose=False)
-        img = Image.fromarray(cart_img.astype(np.uint8), 'L')
+        if settings.DO_MAX_POOLING:
+            width, height, res = (settings.RADAR_SCAN_DIMENSION,
+                                  settings.RADAR_SCAN_DIMENSION,
+                                  config.bin_size_or_resolution)
+            cart_img = radar_sweep.GetCartesian(pixel_width=width, pixel_height=height, resolution=res,
+                                                method='cv2', verbose=False)
+            tensor_image = torch.from_numpy(cart_img)
+            tensor_image = tensor_image[(None,) * 2]
+            pooling = torch.nn.MaxPool2d(kernel_size=2,  # settings.RADAR_RESOLUTION_SCALING_FACTOR,
+                                         stride=1)
+            pooled_image = pooling(tensor_image)
+            pooled_image = torch.nn.Upsample(size=(settings.RADAR_IMAGE_DIMENSION, settings.RADAR_IMAGE_DIMENSION),
+                                             mode='bilinear')(pooled_image).int()
+            img = transforms.ToPILImage()(pooled_image.squeeze_(0)).convert("L")
+        else:
+            width, height, res = (settings.RADAR_IMAGE_DIMENSION,
+                                  settings.RADAR_IMAGE_DIMENSION,
+                                  config.bin_size_or_resolution * settings.RADAR_RESOLUTION_SCALING_FACTOR)
+            cart_img = radar_sweep.GetCartesian(pixel_width=width, pixel_height=height, resolution=res,
+                                                method='cv2', verbose=False)
+            img = Image.fromarray(cart_img.astype(np.uint8), 'L')
+
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", i, ".png"))
         img.close()
 
