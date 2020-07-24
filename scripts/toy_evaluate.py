@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 
 import settings
-from toy_dataset_loader import TunnelDataset, ToTensor, Normalise
+from toy_dataset_loader import TunnelDataset, ToTensor
 
 # data_transform = transforms.Compose([ToTensor(), Normalise()])
 data_transform_for_evaluation = transforms.Compose([ToTensor()])

@@ -2,10 +2,10 @@ import torch.nn as nn
 import torch.nn.functional as func
 
 
-class Net(nn.Module):
+class LeNet(nn.Module):
 
     def __init__(self):
-        super(Net, self).__init__()
+        super(LeNet, self).__init__()
         # 1 input image channel, 6 output channels, 3x3 square convolution
         # kernel
         self.conv1 = nn.Conv2d(1, 6, 3)

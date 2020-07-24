@@ -1,5 +1,5 @@
 # Project-specific settings live here.
-from network import Net
+from lenet import LeNet
 from resnet import resnet18
 
 import torch
@@ -43,7 +43,7 @@ ARCHITECTURE_TYPE = LENET_STR
 MODEL = None
 
 if ARCHITECTURE_TYPE == LENET_STR:
-    MODEL = Net()
+    MODEL = LeNet()
 elif ARCHITECTURE_TYPE == RESNET_STR:
     MODEL = resnet18()
 
