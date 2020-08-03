@@ -6,17 +6,17 @@ from pathlib import Path
 import time
 
 import settings
-from toy_dataset_loader import TunnelDataset, ToTensor, Normalise
-from toy_evaluate import do_quick_evaluation
+from dataset_loader import TunnelDataset, ToTensor, Normalise
+from evaluate import do_quick_evaluation
 
 start_time = time.time()
 
-Path(settings.TOY_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
-Path(settings.TOY_MODEL_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.SIM_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.SIM_MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
 data_transform_for_training = transforms.Compose([ToTensor(), Normalise()])
 
-train_dataset = TunnelDataset(root_dir=settings.TOY_IMAGE_DIR,
+train_dataset = TunnelDataset(root_dir=settings.SIM_IMAGE_DIR,
                               data_subset_type=settings.TRAIN_SUBSET,
                               transform=data_transform_for_training)
 
@@ -61,7 +61,7 @@ for epoch in range(10):  # loop over the dataset multiple times
             losses_over_epochs.append(running_loss)
             running_loss = 0.0
 
-    torch.save(net.state_dict(), "%s%s%s" % (settings.TOY_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"))
+    torch.save(net.state_dict(), "%s%s%s" % (settings.SIM_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"))
 
     plt.figure(figsize=(15, 5))
     plt.plot(losses_over_epochs, '.-')
@@ -70,7 +70,7 @@ for epoch in range(10):  # loop over the dataset multiple times
     plt.ylabel("Loss")
     plt.title("%s%s%s%s" % ("Loss after each epoch, model = ", settings.ARCHITECTURE_TYPE, ", batch size = ",
                             train_loader.batch_size))
-    plt.savefig(settings.TOY_RESULTS_DIR + "/training_loss.png")
+    plt.savefig(settings.SIM_RESULTS_DIR + "/training_loss.png")
     plt.close()
 print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))

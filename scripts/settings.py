@@ -22,15 +22,6 @@ TRAIN_RATIO = 0.7
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
 
-# Tunnel parameters
-TOY_IMAGE_DIMENSION = 64
-MIN_WIDTH, MAX_WIDTH = 8, 16
-MIN_LENGTH, MAX_LENGTH = 15, 20
-WALL_WIDTH = 2
-SPEED_NOISE_LEVEL = 0.25
-TOY_SPEED_MEAN = 11.44
-TOY_SPEED_STD_DEV = 2.28
-
 # Radar scan dataset parameters
 RADAR_SCAN_DIMENSION = 512
 RADAR_IMAGE_DIMENSION = 64
@@ -57,11 +48,6 @@ ROOT_DIR = "/workspace/data/speed-from-image/"
 RADAR_IMAGE_DIR = ROOT_DIR + "radar-images/"
 MODEL_DIR = ROOT_DIR + "models/"
 RESULTS_DIR = ROOT_DIR + "evaluation/" + ARCHITECTURE_TYPE + "/"
-
-TOY_IMAGE_DIR = ROOT_DIR + "toy-images/"
-TOY_MODEL_DIR = ROOT_DIR + "toy-models/"
-TOY_RESULTS_DIR = ROOT_DIR + "toy-evaluation/" + ARCHITECTURE_TYPE + "/"
-
 RADAR_DATASET_PATH = "/workspace/data/RadarDataLogs/2017-08-18-11-21-04-oxford-10k-with-radar-1/logs/radar/cts350x/" \
                      "2017-08-18-10-21-06"
 RAW_SCAN_MONOLITHIC = RADAR_DATASET_PATH + "/cts350x_raw_scan.monolithic"

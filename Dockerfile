@@ -5,7 +5,7 @@ FROM continuumio/miniconda3
 WORKDIR /workspace
 
 # Copy the list of required dependencies to /tmp
-COPY /scripts/environment.yml /tmp/environment.yml
+COPY /environment.yml /tmp/environment.yml
 
 # Create the environment with these dependencies:
 RUN conda env create -f /tmp/environment.yml

@@ -37,7 +37,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
     w, h = settings.TOY_IMAGE_DIMENSION, settings.TOY_IMAGE_DIMENSION
     speed_labels = []
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
-    split_data_folder = "%s%s%s" % (settings.TOY_IMAGE_DIR, data_subset_type, "/")
+    split_data_folder = "%s%s%s" % (settings.SIM_IMAGE_DIR, data_subset_type, "/")
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
     for idx in range(num_samples):
         width = np.zeros(settings.TOY_IMAGE_DIMENSION, dtype=np.uint8)
