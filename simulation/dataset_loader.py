@@ -56,8 +56,8 @@ class Normalise(object):
 
     def __call__(self, sample):
         image, speeds = sample['image'], sample['speeds']
-        mean = settings.TOY_SPEED_MEAN
-        std_dev = settings.TOY_SPEED_STD_DEV
+        mean = settings.SIM_SPEED_MEAN
+        std_dev = settings.SIM_SPEED_STD_DEV
         scaled_speeds = (speeds - mean) / std_dev
         return {'image': image,
                 'speeds': scaled_speeds}
