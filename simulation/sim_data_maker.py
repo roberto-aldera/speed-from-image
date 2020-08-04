@@ -33,7 +33,6 @@ def decomposition(leftovers, min_val, max_val):
 
 
 def generate_and_save_samples(data_ratio, data_subset_type):
-    start = np.array([0, int(settings.SIM_IMAGE_DIMENSION / 2)])
     w, h = settings.SIM_IMAGE_DIMENSION, settings.SIM_IMAGE_DIMENSION
     speed_labels = []
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
@@ -52,6 +51,12 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         gauss = gauss.reshape(row, col).astype(np.uint8)
         data += gauss
 
+        # Draw robot position
+        robot_x = int(settings.SIM_IMAGE_DIMENSION / 2)
+        robot_y = int(settings.SIM_IMAGE_DIMENSION / 2)
+        data[robot_x - settings.SIM_ROBOT_RADIUS:robot_x + settings.SIM_ROBOT_RADIUS,
+        robot_y - settings.SIM_ROBOT_RADIUS:robot_y + settings.SIM_ROBOT_RADIUS] = 255
+
         step_vals = list(decomposition(settings.SIM_IMAGE_DIMENSION, settings.MIN_LENGTH,
                                        settings.MAX_LENGTH))  # generate random partitions
         total = 0
@@ -60,18 +65,17 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             width[total:total + step_vals[i]] = randrange(settings.MIN_WIDTH, settings.MAX_WIDTH)
             total += step_vals[i]
 
+        lateral_offset = int(uniform(-settings.MAX_LATERAL_OFFSET, settings.MAX_LATERAL_OFFSET))
+
         for i in range(settings.SIM_IMAGE_DIMENSION):
             half_wall_width = int(settings.WALL_WIDTH / 2)
+            tunnel_centre = int(settings.SIM_IMAGE_DIMENSION / 2)
             # left wall
-            data[i, start[1] - width[i] - half_wall_width:start[1] - width[i] + half_wall_width] = wall_brightness
+            left_wall_centre = tunnel_centre - width[i] + lateral_offset
+            data[i, left_wall_centre - half_wall_width:left_wall_centre + half_wall_width] = wall_brightness
             # right wall
-            data[i, start[1] + width[i] - half_wall_width:start[1] + width[i] + half_wall_width] = wall_brightness
-
-        # Draw robot position
-        robot_x = int(settings.SIM_IMAGE_DIMENSION / 2)
-        robot_y = int(settings.SIM_IMAGE_DIMENSION / 2)
-        data[robot_x - settings.SIM_ROBOT_RADIUS:robot_x + settings.SIM_ROBOT_RADIUS,
-        robot_y - settings.SIM_ROBOT_RADIUS:robot_y + settings.SIM_ROBOT_RADIUS] = 255
+            right_wall_centre = tunnel_centre + width[i] + lateral_offset
+            data[i, right_wall_centre - half_wall_width:right_wall_centre + half_wall_width] = wall_brightness
 
         img = Image.fromarray(data, 'L')
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
