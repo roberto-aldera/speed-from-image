@@ -77,9 +77,11 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
 
         # Add noise to width data and treat this as speed
-        speed = np.zeros(settings.SIM_IMAGE_DIMENSION - robot_x)  # predict speed ahead of robot
+        speed = np.zeros(settings.SIM_IMAGE_DIMENSION - robot_x - settings.SIM_HORIZON_LENGTH)
         for i in range(len(speed)):
-            speed[i] = width[robot_x + i] + uniform(-settings.SPEED_NOISE_LEVEL, settings.SPEED_NOISE_LEVEL)
+            speed[i] = ((width[robot_x + i]) * 2 / 3
+                        + (width[robot_x + i + settings.SIM_HORIZON_LENGTH]) * 1 / 3) / 10
+            speed[i] += uniform(-settings.SPEED_NOISE_LEVEL, settings.SPEED_NOISE_LEVEL)
         speed_labels.append(speed)
 
     np.savetxt(("%s%s%s" % (split_data_folder, data_subset_type, "_speed_labels.csv")), speed_labels, delimiter=",",

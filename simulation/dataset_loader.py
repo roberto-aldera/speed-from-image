@@ -68,19 +68,20 @@ def main():
     tunnel_dataset = TunnelDataset(
         root_dir=settings.SIM_IMAGE_DIR,
         data_subset_type=settings.TRAIN_SUBSET)
-    tunnels_idx = 0
-    tunnel = tunnel_dataset[tunnels_idx]
 
-    print(tunnels_idx, tunnel['image'].shape, tunnel['speeds'].shape)
+    for tunnels_idx in range(10):
+        tunnel = tunnel_dataset[tunnels_idx]
 
-    # plt.figure(figsize=(1, 1))
-    # plt.imshow(tunnel['image'], cmap='gray', vmin=0, vmax=255)
-    plt.figure(figsize=(10, 5))
-    plt.plot(tunnel['speeds'], '.-')
-    plt.ylim(-1, 20)
-    plt.grid()
-    plt.savefig("/workspace/Desktop/tmp.png")
-    plt.close()
+        print(tunnels_idx, tunnel['image'].shape, tunnel['speeds'].shape)
+
+        # plt.figure(figsize=(1, 1))
+        # plt.imshow(tunnel['image'], cmap='gray', vmin=0, vmax=255)
+        plt.figure(figsize=(10, 5))
+        plt.plot(tunnel['speeds'], '.-')
+        plt.ylim(0, 2)
+        plt.grid()
+        plt.savefig("%s%i%s" % ("/workspace/Desktop/idx-", tunnels_idx, ".png"))
+        plt.close()
 
 
 if __name__ == "__main__":
