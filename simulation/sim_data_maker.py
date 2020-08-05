@@ -66,6 +66,7 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             total += step_vals[i]
 
         lateral_offset = int(uniform(-settings.MAX_LATERAL_OFFSET, settings.MAX_LATERAL_OFFSET))
+        proximities = np.zeros(settings.SIM_IMAGE_DIMENSION)
 
         for i in range(settings.SIM_IMAGE_DIMENSION):
             half_wall_width = int(settings.WALL_WIDTH / 2)
@@ -76,6 +77,10 @@ def generate_and_save_samples(data_ratio, data_subset_type):
             # right wall
             right_wall_centre = tunnel_centre + width[i] + lateral_offset
             data[i, right_wall_centre - half_wall_width:right_wall_centre + half_wall_width] = wall_brightness
+            # distance from centre to the nearest wall
+            left_proximity = np.abs(tunnel_centre - left_wall_centre)
+            right_proximity = np.abs(tunnel_centre - right_wall_centre)
+            proximities[i] = left_proximity if left_proximity < right_proximity else right_proximity
 
         img = Image.fromarray(data, 'L')
         img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
@@ -83,8 +88,8 @@ def generate_and_save_samples(data_ratio, data_subset_type):
         # Add noise to width data and treat this as speed
         speed = np.zeros(settings.SIM_IMAGE_DIMENSION - robot_x - settings.SIM_HORIZON_LENGTH)
         for i in range(len(speed)):
-            speed[i] = ((width[robot_x + i]) * 2 / 3
-                        + (width[robot_x + i + settings.SIM_HORIZON_LENGTH]) * 1 / 3) / 10
+            speed[i] = ((proximities[robot_x + i]) * 2 / 3
+                        + (proximities[robot_x + i + settings.SIM_HORIZON_LENGTH]) * 1 / 3) / 10
             speed[i] += uniform(-settings.SPEED_NOISE_LEVEL, settings.SPEED_NOISE_LEVEL)
         speed_labels.append(speed)
 
