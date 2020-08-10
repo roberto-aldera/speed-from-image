@@ -5,12 +5,6 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import settings
 
-np.random.seed(0)
-obstacles = np.random.randint(1, settings.MAP_SIZE, size=(2, settings.NUM_OBSTACLES))
-
-subset_fig_path = settings.MAZE_IMAGE_DIR + "tmp" + "/"
-Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
-
 
 def run_maze_sim():
     k = 0
@@ -52,8 +46,11 @@ def run_maze_sim():
         k += 1
 
     plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
+    plt.plot(x_start[0], x_start[1], 'mo')
     plt.plot(x_goal[0], x_goal[1], 'go')
     plt.grid()
+    plt.xlim(0, settings.MAP_SIZE)
+    plt.ylim(0, settings.MAP_SIZE)
     plt.savefig("%s%s%i%s" % (subset_fig_path, "idx-", 0, ".png"))
     plt.close()
     print("k =", k)
@@ -62,13 +59,20 @@ def run_maze_sim():
 
 def generate_image_from_maze():
     data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
-    # obstacle_radius = 1
+    radius = settings.ADDITIONAL_OBSTACLE_WEIGHT
     for i in range(settings.NUM_OBSTACLES):
-        # data[
-        # settings.MAP_SIZE - obstacles[1, i] - obstacle_radius:settings.MAP_SIZE - obstacles[1, i] + obstacle_radius,
-        # obstacles[0, i] - obstacle_radius:obstacles[0, i] + obstacle_radius] = 255
-        data[settings.MAP_SIZE - obstacles[1, i] - 1,
-             obstacles[0, i]] = 255
+        data[(settings.MAP_SIZE - 1) - obstacles[1, i] - radius:
+             (settings.MAP_SIZE - 1) - obstacles[1, i] + radius + 1,
+        obstacles[0, i] - radius:obstacles[0, i] + radius + 1] = 255
+        # data[settings.MAP_SIZE - 1 - obstacles[1, i],
+        #      obstacles[0, i]] = 255
+
+    # Draw robot position
+    robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
+    robot_y = int(settings.MAZE_IMAGE_DIMENSION / 2)
+    data[robot_x - settings.ADDITIONAL_ROBOT_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_WEIGHT + 1,
+    robot_y - settings.ADDITIONAL_ROBOT_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_WEIGHT + 1] = 255
+
     img = Image.fromarray(data, 'L')
     img.save("%s%s%i%s" % (subset_fig_path, "image-", 0, ".png"))
 
@@ -103,16 +107,24 @@ def generate_relative_poses(robot_xy, robot_th):
 
     dx = []
     dy = []
+    dth = []
     for i in range(len(relative_poses)):
         dx.append(relative_poses[i][0, 2])
         dy.append(relative_poses[i][1, 2])
+        dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
     plt.figure(figsize=(10, 3))
-    plt.plot(dx, '.-')
-    plt.plot(dy, '.-')
+    plt.plot(dx, '.-', label="x")
+    plt.plot(dy, '.-', label="y")
+    plt.plot(dth, '.-', label="yaw")
     plt.grid()
+    plt.legend()
     plt.savefig("%s%s%i%s" % (subset_fig_path, "dx_dy-", 0, ".png"))
 
 
+# Generate obstacles in random positions across the map
+obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.NUM_OBSTACLES))
+subset_fig_path = settings.MAZE_IMAGE_DIR + "tmp" + "/"
+Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
 xy_positions, thetas = run_maze_sim()
 generate_image_from_maze()
 generate_relative_poses(xy_positions, thetas)
