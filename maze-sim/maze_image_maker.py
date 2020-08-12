@@ -3,6 +3,7 @@ import math
 from PIL import Image
 import matplotlib.pyplot as plt
 from pathlib import Path
+import shutil
 import time
 import settings
 
@@ -133,6 +134,7 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
 
 def generate_maze_samples(data_ratio, data_subset_type):
     split_data_folder = "%s%s%s" % (settings.MAZE_IMAGE_DIR, data_subset_type, "/")
+    shutil.rmtree(split_data_folder)
     Path(split_data_folder).mkdir(parents=True, exist_ok=True)
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
     save_plots = True
