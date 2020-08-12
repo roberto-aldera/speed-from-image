@@ -17,10 +17,15 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     robot_xy = np.array(x_robot)
     robot_th = np.array(0)
     # Generate obstacles in random positions across the map
-    obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.NUM_OBSTACLES))
+    obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.MAX_NUM_OBSTACLES))
+    # Remove any obstacles that are too close to the robot's starting position
+    relative_positions = obstacles - np.tile(x_start, (1, settings.MAX_NUM_OBSTACLES))
+    distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
+    obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=1)
+    num_obstacles = obstacles.shape[1]  # account for the loss of the obstacles that were too close
 
     while k < settings.MAX_ITERATIONS:
-        relative_positions = obstacles - np.tile(x_robot, (1, settings.NUM_OBSTACLES))
+        relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
         for i in range(relative_positions.shape[1]):
             if np.all(relative_positions[:, i] == [0, 0]):
                 print("Error: obstacle and robot are both at position:", obstacles[:, i],
@@ -62,7 +67,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
 
     data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
     radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT
-    for i in range(settings.NUM_OBSTACLES):
+    for i in range(num_obstacles):
         data[(settings.MAP_SIZE - 1) - obstacles[1, i] - radius:
              (settings.MAP_SIZE - 1) - obstacles[1, i] + radius + 1,
         obstacles[0, i] - radius:obstacles[0, i] + radius + 1] = 255
