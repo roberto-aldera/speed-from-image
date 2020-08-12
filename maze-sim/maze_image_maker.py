@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 from PIL import Image
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -17,7 +18,9 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     robot_xy = np.array(x_robot)
     robot_th = np.array(0)
     # Generate obstacles in random positions across the map
-    obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.MAX_NUM_OBSTACLES))
+    # obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.MAX_NUM_OBSTACLES))
+    obstacles = [[random.randrange(0, settings.MAP_SIZE - 1, settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for x in
+                  range(settings.MAX_NUM_OBSTACLES)] for y in range(2)]
     # Remove any obstacles that are too close to the robot's starting position
     relative_positions = obstacles - np.tile(x_start, (1, settings.MAX_NUM_OBSTACLES))
     distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
