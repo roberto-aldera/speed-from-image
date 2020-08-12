@@ -21,7 +21,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     if save_plots:  # TODO -> this is a little clunky to have to check in 3 places, make it simpler
         plt.figure(figsize=(10, 10))
 
-    while np.linalg.norm(goal_error) > 1 and k < settings.MAX_ITERATIONS:
+    while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, settings.NUM_OBSTACLES))
         for i in range(relative_positions.shape[1]):
             if np.all(relative_positions[:, i] == [0, 0]):
@@ -36,10 +36,10 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
             v = relative_positions[:, idx_proximal]
             d_rho_dx = -v / rho
             f_proximity = (1 / rho - 1 / settings.OBSTACLE_INFLUENCE_RADIUS) * 1 / (np.square(rho)) * d_rho_dx
-            f_objects = settings.OBSTACLE_WEIGHT * np.sum(f_proximity, axis=1).reshape(-1, 1)
+            f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=1).reshape(-1, 1)
         else:
             f_objects = np.array([0, 0]).reshape(-1, 1)
-        f_goal = settings.GOAL_WEIGHT * goal_error / np.linalg.norm(goal_error)
+        f_goal = settings.GOAL_FORCE_MULTIPLIER * goal_error / np.linalg.norm(goal_error)
         f_total = f_goal + f_objects
         f_total = f_total / np.linalg.norm(f_total) * min(settings.VELOCITY_LIMIT, np.linalg.norm(f_total))
         theta_robot = math.atan2(f_total[1], f_total[0])
@@ -63,7 +63,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     print("k =", k)
 
     data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
-    radius = settings.ADDITIONAL_OBSTACLE_WEIGHT
+    radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT
     for i in range(settings.NUM_OBSTACLES):
         data[(settings.MAP_SIZE - 1) - obstacles[1, i] - radius:
              (settings.MAP_SIZE - 1) - obstacles[1, i] + radius + 1,
@@ -74,8 +74,8 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     # Draw robot position
     robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
     robot_y = int(settings.MAZE_IMAGE_DIMENSION / 2)
-    data[robot_x - settings.ADDITIONAL_ROBOT_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_WEIGHT + 1,
-    robot_y - settings.ADDITIONAL_ROBOT_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_WEIGHT + 1] = 255
+    data[robot_x - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1,
+    robot_y - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1] = 255
 
     img = Image.fromarray(data, 'L')
     img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
@@ -135,12 +135,11 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
 def generate_maze_samples(data_ratio, data_subset_type):
     split_data_folder = "%s%s%s" % (settings.MAZE_IMAGE_DIR, data_subset_type, "/")
     shutil.rmtree(split_data_folder)
-    Path(split_data_folder).mkdir(parents=True, exist_ok=True)
+    Path(split_data_folder).mkdir(parents=True)
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
     save_plots = True
 
     for idx in range(num_samples):
-        # TODO -> generate N positions the robot moves to in the maze, and use this as a standard horizon
         xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type,
                                                                 save_plots)
         generate_relative_poses(idx, xy_positions, thetas, split_data_folder, data_subset_type, save_plots)
