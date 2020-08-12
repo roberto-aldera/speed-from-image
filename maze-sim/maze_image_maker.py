@@ -18,8 +18,6 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     robot_th = np.array(0)
     # Generate obstacles in random positions across the map
     obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.NUM_OBSTACLES))
-    if save_plots:  # TODO -> this is a little clunky to have to check in 3 places, make it simpler
-        plt.figure(figsize=(10, 10))
 
     while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, settings.NUM_OBSTACLES))
@@ -46,13 +44,13 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
         x_robot = x_robot + f_total
         robot_xy = np.append(robot_xy, x_robot, axis=1)
         robot_th = np.append(robot_th, theta_robot)
-        if save_plots:
-            plt.plot(x_robot[0], x_robot[1], 'b^')
         goal_error = x_goal - x_robot
         k += 1
 
     if save_plots:
+        plt.figure(figsize=(10, 10))
         plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
+        plt.plot(robot_xy[0, :], robot_xy[1, :], 'b^')
         plt.plot(x_start[0], x_start[1], 'mo')
         plt.plot(x_goal[0], x_goal[1], 'go')
         plt.grid()
@@ -60,7 +58,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
         plt.ylim(0, settings.MAP_SIZE)
         plt.savefig("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_maze_", idx, ".png"))
         plt.close()
-    print("k =", k)
+    print("Maze sim complete for index:", idx)
 
     data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
     radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT
