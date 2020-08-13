@@ -91,7 +91,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     return robot_xy, robot_th
 
 
-def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_subset_type, save_plots=False):
+def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subset_type, save_plots=False):
     x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
     T_robot_world = np.identity(3)
     th = np.pi / 2  # facing upwards
@@ -127,7 +127,7 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
         dy.append(relative_poses[i][1, 2])
         dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
 
-    np.savetxt(("%s%s%s%s%s%s" % (split_data_folder, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
+    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
                dx, delimiter=",",
                fmt="%10.5f")
     if save_plots:
@@ -137,7 +137,8 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
         plt.plot(dth, '.-', label="yaw")
         plt.grid()
         plt.legend()
-        plt.savefig("%s%s%i%s" % (split_data_folder, "/dx_dy_dth_", idx, ".png"))
+        plt.savefig("%s%s%i%s" % (split_data_path, "/dx_dy_dth_", idx, ".png"))
+        plt.close()
 
 
 def generate_maze_samples(data_ratio, data_subset_type):

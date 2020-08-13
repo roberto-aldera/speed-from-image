@@ -1,6 +1,6 @@
 # Project-specific settings live here.
-# from lenet import LeNet
-# from resnet import resnet18
+from lenet import LeNet
+from resnet import resnet18
 
 import torch
 import numpy as np
@@ -35,23 +35,24 @@ OBSTACLE_FORCE_MULTIPLIER = 0.5
 VELOCITY_LIMIT = 0.5
 ADDITIONAL_OBSTACLE_VISUAL_WEIGHT = 0
 ADDITIONAL_ROBOT_VISUAL_WEIGHT = 1
-# MAZE_SPEED_MEAN = 11.44
-# MAZE_SPEED_STD_DEV = 2.28
+MAZE_SPEED_MEAN = 0
+MAZE_SPEED_STD_DEV = 1
 
 # Models
-# LENET_STR = "LeNet"
-# RESNET_STR = "ResNet"
-#
-# ARCHITECTURE_TYPE = LENET_STR
-# MODEL = None
-#
-# if ARCHITECTURE_TYPE == LENET_STR:
-#     MODEL = LeNet()
-# elif ARCHITECTURE_TYPE == RESNET_STR:
-#     MODEL = resnet18()
+LENET_STR = "LeNet"
+RESNET_STR = "ResNet"
+
+ARCHITECTURE_TYPE = LENET_STR
+# ARCHITECTURE_TYPE = RESNET_STR
+MODEL = None
+
+if ARCHITECTURE_TYPE == LENET_STR:
+    MODEL = LeNet()
+elif ARCHITECTURE_TYPE == RESNET_STR:
+    MODEL = resnet18()
 
 # Paths
 ROOT_DIR = "/workspace/data/speed-from-image/"
 MAZE_IMAGE_DIR = ROOT_DIR + "maze-images/"
-# MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
-# MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/" + ARCHITECTURE_TYPE + "/"
+MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
+MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/" + ARCHITECTURE_TYPE + "/"
