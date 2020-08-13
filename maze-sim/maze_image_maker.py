@@ -9,7 +9,7 @@ import time
 import settings
 
 
-def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, save_plots=False):
+def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, save_plots=False):
     k = 0
     x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
     x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE]).reshape(2, -1)
@@ -25,6 +25,8 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     relative_positions = obstacles - np.tile(x_start, (1, settings.MAX_NUM_OBSTACLES))
     distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
     obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=1)
+    # Remove obstacles directly ahead of starting position
+    obstacles = np.delete(obstacles, np.argwhere(obstacles[0, :] == x_start[0]), axis=1)
     num_obstacles = obstacles.shape[1]  # account for the loss of the obstacles that were too close
 
     while k < settings.MAX_ITERATIONS:
@@ -64,7 +66,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
         plt.grid()
         plt.xlim(0, settings.MAP_SIZE)
         plt.ylim(0, settings.MAP_SIZE)
-        plt.savefig("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_maze_", idx, ".png"))
+        plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_maze_", idx, ".png"))
         plt.close()
     print("Maze sim complete for index:", idx)
 
@@ -84,7 +86,7 @@ def run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type, s
     robot_y - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1] = 255
 
     img = Image.fromarray(data, 'L')
-    img.save("%s%s%s%i%s" % (split_data_folder, data_subset_type, "_", idx, ".png"))
+    img.save("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_", idx, ".png"))
 
     return robot_xy, robot_th
 
@@ -125,7 +127,7 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
         dy.append(relative_poses[i][1, 2])
         dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
 
-    np.savetxt(("%s%s%s%s%s%s" % (split_data_folder, "speed_labels_", data_subset_type, "_", idx, ".csv")),
+    np.savetxt(("%s%s%s%s%s%s" % (split_data_folder, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
                dx, delimiter=",",
                fmt="%10.5f")
     if save_plots:
@@ -135,26 +137,29 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_folder, data_sub
         plt.plot(dth, '.-', label="yaw")
         plt.grid()
         plt.legend()
-        plt.savefig("%s%s%i%s" % (split_data_folder, "dx_dy_dth_", idx, ".png"))
+        plt.savefig("%s%s%i%s" % (split_data_folder, "/dx_dy_dth_", idx, ".png"))
 
 
 def generate_maze_samples(data_ratio, data_subset_type):
-    split_data_folder = "%s%s%s" % (settings.MAZE_IMAGE_DIR, data_subset_type, "/")
-    shutil.rmtree(split_data_folder)
-    Path(split_data_folder).mkdir(parents=True)
+    split_data_path = Path(settings.MAZE_IMAGE_DIR, data_subset_type)
+    if split_data_path.exists() and split_data_path.is_dir():
+        shutil.rmtree(split_data_path)
+    split_data_path.mkdir(parents=True)
     num_samples = int(settings.TOTAL_SAMPLES * data_ratio)
     save_plots = True
 
     for idx in range(num_samples):
-        xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_folder, data_subset_type,
+        xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
                                                                 save_plots)
-        generate_relative_poses(idx, xy_positions, thetas, split_data_folder, data_subset_type, save_plots)
+        generate_relative_poses(idx, xy_positions, thetas, split_data_path, data_subset_type, save_plots)
 
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
-          "and written to:", split_data_folder)
+          "and written to:", split_data_path)
 
 
 start_time = time.time()
 
 generate_maze_samples(settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
+generate_maze_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
+generate_maze_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
 print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))
