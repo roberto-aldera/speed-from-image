@@ -41,7 +41,7 @@ for epoch in range(5):  # loop over the dataset multiple times
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
         labels = sample_batched['pose_data'].to(torch.float32)[:, 0:1]
-        # print(sample_batched['pose_data'].to(torch.float32)[:,0:1])
+        # print(sample_batched['pose_data'].to(torch.float32)[:, 0:2])
         # zero the parameter gradients
         optimizer.zero_grad()
 
@@ -83,4 +83,4 @@ print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
 path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
-# do_quick_evaluation(model_path=path_to_model)
+do_quick_evaluation(model_path=path_to_model)
