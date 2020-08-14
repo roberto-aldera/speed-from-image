@@ -37,10 +37,10 @@ class MazeDataset(Dataset):
             idx = idx.tolist()
         img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + ".png"
         image = np.array(Image.open(img_name))
-        dx_data = pd.read_csv(
+        pose_data = pd.read_csv(
             self.root_dir + "/" + "speed_labels_" + self.data_subset_type + "_" + str(idx) + ".csv",
             header=None)
-        sample = {'image': image, 'dx_data': dx_data}
+        sample = {'image': image, 'pose_data': pose_data}
 
         if self.transform:
             sample = self.transform(sample)
@@ -52,21 +52,24 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        image, dx_data = sample['image'], sample['dx_data']
+        image, pose_data = sample['image'], sample['pose_data']
+        # print("Shape:", pose_data.shape)
+        # print("Type:", type(pose_data))
+        # print("pose_data: ", torch.tensor(pose_data.values))
         return {'image': torch.from_numpy(image),
-                'dx_data': torch.tensor(dx_data[0])}
+                'pose_data': torch.tensor(pose_data.values)}
 
 
 class Normalise(object):
     """Perform normalisation."""
 
     def __call__(self, sample):
-        image, dx_data = sample['image'], sample['dx_data']
+        image, pose_data = sample['image'], sample['pose_data']
         mean = settings.MAZE_SPEED_MEAN
         std_dev = settings.MAZE_SPEED_STD_DEV
-        scaled_dx_data = (dx_data - mean) / std_dev
+        scaled_pose_data = (pose_data - mean) / std_dev
         return {'image': image,
-                'dx_data': scaled_dx_data}
+                'pose_data': scaled_pose_data}
 
 
 def main():
@@ -75,17 +78,19 @@ def main():
         root_dir=settings.MAZE_IMAGE_DIR,
         data_subset_type=settings.TRAIN_SUBSET)
 
-    for maze_idx in range(10):
+    for maze_idx in range(2):
         maze = maze_dataset[maze_idx]
-
-        print(maze_idx, maze['image'].shape, maze['dx_data'].shape)
+        print(maze_idx, maze['image'].shape, maze['pose_data'].shape)
 
         # plt.figure(figsize=(1, 1))
         # plt.imshow(maze['image'], cmap='gray', vmin=0, vmax=255)
         plt.figure(figsize=(10, 5))
-        plt.plot(maze['dx_data'], '.-')
-        plt.ylim(0, 1)
+        plt.plot(maze['pose_data'].iloc[0, :], '.-', label="dx")
+        plt.plot(maze['pose_data'].iloc[1, :], '.-', label="dy")
+        plt.plot(maze['pose_data'].iloc[2, :], '.-', label="dth")
+        plt.ylim(-1, 1)
         plt.grid()
+        plt.legend()
         plt.savefig("%s%i%s" % ("/workspace/Desktop/speeds/idx-", maze_idx, ".png"))
         plt.close()
 

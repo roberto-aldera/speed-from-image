@@ -23,7 +23,7 @@ train_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
 print("Training set size:", len(train_dataset))
 
 sample = train_dataset[0]
-print(0, sample['image'].size(), sample['dx_data'].size())
+print(0, sample['image'].size(), sample['pose_data'].size())
 
 # Training starts here
 train_loader = DataLoader(train_dataset, batch_size=16,
@@ -36,19 +36,20 @@ criterion = torch.nn.MSELoss()  # mean-squared error for regression
 optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
 losses_over_epochs = []
-for epoch in range(10):  # loop over the dataset multiple times
+for epoch in range(5):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
-        labels = sample_batched['dx_data'].to(torch.float32)
+        labels = sample_batched['pose_data'].to(torch.float32)[:, 0:1]
+        # print(sample_batched['pose_data'].to(torch.float32)[:,0:1])
         # zero the parameter gradients
         optimizer.zero_grad()
 
         # forward + backward + optimize
         outputs = net(inputs)
-        # print("Inputs:", inputs.shape)
-        # print("Labels:", labels.shape)
-        # print("Outputs:", outputs.shape)
+        print("Inputs:", inputs.shape)
+        print("Labels:", labels.shape)
+        print("Outputs:", outputs.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -82,4 +83,4 @@ print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
 path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
-do_quick_evaluation(model_path=path_to_model)
+# do_quick_evaluation(model_path=path_to_model)

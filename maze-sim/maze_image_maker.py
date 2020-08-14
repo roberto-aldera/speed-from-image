@@ -76,8 +76,6 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
         data[(settings.MAP_SIZE - 1) - obstacles[1, i] - radius:
              (settings.MAP_SIZE - 1) - obstacles[1, i] + radius + 1,
         obstacles[0, i] - radius:obstacles[0, i] + radius + 1] = 255
-        # data[settings.MAP_SIZE - 1 - obstacles[1, i],
-        #      obstacles[0, i]] = 255
 
     # Draw robot position
     robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
@@ -128,8 +126,9 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subse
         dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
 
     np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
-               dx, delimiter=",",
+               (dx, dy, dth), delimiter=",",
                fmt="%10.5f")
+
     if save_plots:
         plt.figure(figsize=(10, 3))
         plt.plot(dx, '.-', label="x")
@@ -161,6 +160,6 @@ def generate_maze_samples(data_ratio, data_subset_type):
 start_time = time.time()
 
 generate_maze_samples(settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
-generate_maze_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
-generate_maze_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
+# generate_maze_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
+# generate_maze_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
 print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))
