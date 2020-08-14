@@ -61,7 +61,8 @@ for epoch in range(10):  # loop over the dataset multiple times
             losses_over_epochs.append(running_loss)
             running_loss = 0.0
 
-    torch.save(net.state_dict(), "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"))
+    torch.save(net.state_dict(),
+               "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt"))
 
     plt.figure(figsize=(15, 5))
     plt.plot(losses_over_epochs, '.-')
@@ -72,7 +73,13 @@ for epoch in range(10):  # loop over the dataset multiple times
                             train_loader.batch_size))
     plt.savefig(settings.MAZE_RESULTS_DIR + "/training_loss.png")
     plt.close()
+
+# Save final model with unique filename
+torch.save(net.state_dict(), "%s%s%s%s%s" % (
+    settings.MAZE_MODEL_DIR, time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()), "_", settings.ARCHITECTURE_TYPE,
+    ".pt"))
 print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-do_quick_evaluation()
+path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
+do_quick_evaluation(model_path=path_to_model)

@@ -30,7 +30,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
         plt.figure(figsize=(15, 5))
         plt.plot(dx_labels, label="Ground truth")
         plt.plot(dx_estimate[0], label="Prediction")
-        plt.ylim(-1, 2)
+        plt.ylim(0, 1)
         plt.xlabel("Index")
         plt.ylabel("dx")
         plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set example"))
@@ -58,13 +58,12 @@ def calculate_rmse(data_subset_type, model):
     print(cumulative_rmse / len(data_loader))
 
 
-def do_quick_evaluation():
+def do_quick_evaluation(model_path):
     start_time = time.time()
     model = settings.MODEL
-    model.load_state_dict(torch.load("%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt")))
+    model.load_state_dict(torch.load(model_path))
     model.eval()
-    print("Loaded model from", "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".pt"),
-          "-> ready to evaluate.")
+    print("Loaded model from", model_path, "-> ready to evaluate.")
 
     print("Generating evaluation plots...")
     num_samples = 5
@@ -82,7 +81,8 @@ def do_quick_evaluation():
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
-    do_quick_evaluation()
+    path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
+    do_quick_evaluation(model_path=path_to_model)
 
 
 if __name__ == "__main__":
