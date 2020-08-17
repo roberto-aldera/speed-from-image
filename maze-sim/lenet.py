@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as func
 import settings
 
-dims = 2
+dims = 3
 
 
 class LeNet(nn.Module):

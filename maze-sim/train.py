@@ -40,16 +40,16 @@ for epoch in range(200):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
-        labels = sample_batched['pose_data'].to(torch.float32)[:, 0:2]
+        labels = sample_batched['pose_data'].to(torch.float32)
         # print(sample_batched['pose_data'].to(torch.float32)[:, 0:2])
         # zero the parameter gradients
         optimizer.zero_grad()
 
         # forward + backward + optimize
         outputs = net(inputs)
-        print("Inputs:", inputs.shape)
-        print("Labels:", labels.shape)
-        print("Outputs:", outputs.shape)
+        # print("Inputs:", inputs.shape)
+        # print("Labels:", labels.shape)
+        # print("Outputs:", outputs.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
