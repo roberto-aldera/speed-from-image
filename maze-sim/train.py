@@ -36,7 +36,7 @@ criterion = torch.nn.MSELoss()  # mean-squared error for regression
 optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
 losses_over_epochs = []
-for epoch in range(200):  # loop over the dataset multiple times
+for epoch in range(100):  # loop over the dataset multiple times
     running_loss = 0.0
     for batch_idx, sample_batched in enumerate(train_loader):
         inputs = sample_batched['image'].unsqueeze_(1)  # batch_size, channels, H, W
