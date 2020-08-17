@@ -2,8 +2,6 @@ import torch.nn as nn
 import torch.nn.functional as func
 import settings
 
-dims = 3
-
 
 class LeNet(nn.Module):
 
@@ -15,7 +13,7 @@ class LeNet(nn.Module):
         # an affine operation: y = Wx + b
         self.fc1 = nn.Linear(in_features=576, out_features=400)
         self.fc2 = nn.Linear(in_features=400, out_features=100)
-        self.fc3 = nn.Linear(in_features=100, out_features=settings.MAX_ITERATIONS * dims)
+        self.fc3 = nn.Linear(in_features=100, out_features=settings.MAX_ITERATIONS * settings.NUM_POSE_DIMS)
 
     def forward(self, x):
         # Max pooling over a (2, 2) window
@@ -27,7 +25,7 @@ class LeNet(nn.Module):
         x = func.relu(self.fc2(x))
         x = self.fc3(x)
         # attempt at making this work for more than just dx (so dy, dth)
-        x = x.view(-1, dims, settings.MAX_ITERATIONS)
+        x = x.view(-1, settings.NUM_POSE_DIMS, settings.MAX_ITERATIONS)
         return x
 
     def num_flat_features(self, x):
