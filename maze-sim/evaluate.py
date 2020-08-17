@@ -28,9 +28,12 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
         pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
 
         plt.figure(figsize=(15, 5))
-        plt.plot(pose_labels[0], label="Ground truth")
-        plt.plot(pose_estimate[0], label="Prediction")
-        plt.ylim(0, 1)
+        plt.plot(pose_labels[0], 'r--', alpha=0.5, label="dx ground truth")
+        plt.plot(pose_labels[1], 'g--', alpha=0.5, label="dy ground truth")
+        plt.plot(pose_estimate[0, 0], 'r', label="dx prediction")
+        plt.plot(pose_estimate[0, 1], 'g', label="dy prediction")
+
+        plt.ylim(-1, 1)
         plt.xlabel("Index")
         plt.ylabel("dx")
         plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set example"))
@@ -48,14 +51,15 @@ def calculate_rmse(data_subset_type, model):
                              shuffle=False, num_workers=1)
     print("RMSE for", data_subset_type, "set:")
     cumulative_rmse = 0
-    # TODO -> check this RMSE calculation for new dimensions that have been added (dy, dth)
+
     for i in range(len(data_loader)):
         img = data_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
-        pose_labels = data_loader.dataset[i]['pose_data'].numpy()[0]  # this [0] is for dx only, work in progress.
-        pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
+        pose_labels = data_loader.dataset[i]['pose_data'].numpy()[0:2]  # for dx, dy
+        pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV).squeeze(
+            0) + settings.MAZE_SPEED_MEAN
         # print("Pose labels:", pose_labels)
         # print("Pose estimate:", pose_estimate)
-        rmse = np.sqrt(np.mean(np.square(pose_labels - pose_estimate) / len(pose_labels)))
+        rmse = np.sqrt(np.mean(np.square(pose_labels - pose_estimate) / len(pose_labels), axis=1))
         cumulative_rmse += rmse
     print(cumulative_rmse / len(data_loader))
 
@@ -68,7 +72,7 @@ def do_quick_evaluation(model_path):
     print("Loaded model from", model_path, "-> ready to evaluate.")
 
     print("Generating evaluation plots...")
-    num_samples = 2
+    num_samples = 5
     generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, num_samples)
     # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, num_samples)
     # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, num_samples)

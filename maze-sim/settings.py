@@ -17,7 +17,7 @@ VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
 # General dataset parameters
-TOTAL_SAMPLES = 10
+TOTAL_SAMPLES = 100
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
