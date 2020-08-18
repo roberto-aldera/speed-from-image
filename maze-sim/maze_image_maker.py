@@ -160,6 +160,6 @@ def generate_maze_samples(data_ratio, data_subset_type):
 start_time = time.time()
 
 generate_maze_samples(settings.TRAIN_RATIO, settings.TRAIN_SUBSET)
-# generate_maze_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
-# generate_maze_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
+generate_maze_samples(settings.VAL_RATIO, settings.VAL_SUBSET)
+generate_maze_samples(settings.TEST_RATIO, settings.TEST_SUBSET)
 print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))

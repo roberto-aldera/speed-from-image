@@ -74,15 +74,15 @@ def do_quick_evaluation(model_path):
     print("Loaded model from", model_path, "-> ready to evaluate.")
 
     print("Generating evaluation plots...")
-    num_samples = 5
+    num_samples = 10
     generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, num_samples)
-    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, num_samples)
-    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, num_samples)
 
     print("Calculating average RMSE (over entire subset)")
     calculate_rmse(settings.TRAIN_SUBSET, model)
-    # calculate_rmse(settings.VAL_SUBSET, model)
-    # calculate_rmse(settings.TEST_SUBSET, model)
+    calculate_rmse(settings.VAL_SUBSET, model)
+    calculate_rmse(settings.TEST_SUBSET, model)
 
     print("--- Evaluation execution time: %s seconds ---" % (time.time() - start_time))
 
