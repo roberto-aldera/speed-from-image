@@ -48,14 +48,17 @@ class MazeDataset(Dataset):
         return sample
 
 
+def CollateFn(batch):
+    images = torch.stack([x['image'] for x in batch])
+    poses = torch.stack([x['pose_data'] for x in batch])
+    return images, poses
+
+
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
         image, pose_data = sample['image'], sample['pose_data']
-        # print("Shape:", pose_data.shape)
-        # print("Type:", type(pose_data))
-        # print("pose_data: ", torch.tensor(pose_data.values))
         return {'image': torch.from_numpy(image),
                 'pose_data': torch.tensor(pose_data.values)}
 
