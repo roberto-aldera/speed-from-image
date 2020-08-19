@@ -6,6 +6,7 @@ from torchvision import transforms
 import pytorch_lightning as pl
 from dataset_loader import MazeDataset, CollateFn, ToTensor, Normalise
 from lenet import LeNet
+from resnet import resnet18
 
 
 class MyLightningTemplateModel(pl.LightningModule):
@@ -75,3 +76,9 @@ class LeNetLightningTemplateModel(MyLightningTemplateModel):
     def __init__(self):
         super().__init__()
         self.net = LeNet()
+
+
+class ResNetLightningTemplateModel(MyLightningTemplateModel):
+    def __init__(self):
+        super().__init__()
+        self.net = resnet18()

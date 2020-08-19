@@ -181,6 +181,8 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def _forward_impl(self, x):
+        x = x.unsqueeze_(1)
+
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
