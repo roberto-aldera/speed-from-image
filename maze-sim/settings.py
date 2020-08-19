@@ -1,15 +1,11 @@
 # Project-specific settings live here.
-from lenet import LeNet
+from lightning import LeNetLightningTemplateModel
 from resnet import resnet18
 
-import torch
-import numpy as np
-import random
+import pytorch_lightning as pl
 
 # Ensure reproducibility
-torch.manual_seed(0)
-np.random.seed(0)
-random.seed(0)
+pl.seed_everything(0)
 
 # data subset names
 TRAIN_SUBSET = "training"
@@ -48,7 +44,7 @@ ARCHITECTURE_TYPE = LENET_STR
 MODEL = None
 
 if ARCHITECTURE_TYPE == LENET_STR:
-    MODEL = LeNet()
+    MODEL = LeNetLightningTemplateModel()
 elif ARCHITECTURE_TYPE == RESNET_STR:
     MODEL = resnet18()
 
