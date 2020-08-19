@@ -6,17 +6,18 @@ from evaluate import do_quick_evaluation
 
 start_time = time.time()
 
-# Path(settings.MAZE_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
-# Path(settings.MAZE_MODEL_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.MAZE_RESULTS_DIR).mkdir(parents=True, exist_ok=True)
+Path(settings.MAZE_MODEL_DIR).mkdir(parents=True, exist_ok=True)
 
 model = settings.MODEL
-trainer = pl.Trainer(max_epochs=3, progress_bar_refresh_rate=5)
+trainer = pl.Trainer(max_epochs=3)
 trainer.fit(model)
+path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".ckpt")
+trainer.save_checkpoint(path_to_model)
 
 # trainer.test()
 
 print("Finished Training")
 print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-# path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
-# do_quick_evaluation(model_path=path_to_model)
+do_quick_evaluation(model_path=path_to_model)

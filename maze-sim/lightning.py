@@ -11,7 +11,7 @@ from lenet import LeNet
 class MyLightningTemplateModel(pl.LightningModule):
 
     def __init__(self):
-        super(MyLightningTemplateModel, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return self.net(x)
@@ -73,5 +73,5 @@ class MyLightningTemplateModel(pl.LightningModule):
 
 class LeNetLightningTemplateModel(MyLightningTemplateModel):
     def __init__(self):
-        super(LeNetLightningTemplateModel, self).__init__()
+        super().__init__()
         self.net = LeNet()

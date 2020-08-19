@@ -6,7 +6,7 @@ import settings
 class LeNet(nn.Module):
 
     def __init__(self):
-        super(LeNet, self).__init__()
+        super().__init__()
         # 1 input image channel, 6 output channels, 3x3 square convolution kernel
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3)

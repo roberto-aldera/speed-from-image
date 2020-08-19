@@ -9,7 +9,6 @@ import time
 import settings
 from dataset_loader import MazeDataset, ToTensor
 
-# data_transform = transforms.Compose([ToTensor(), Normalise()])
 data_transform_for_evaluation = transforms.Compose([ToTensor()])
 
 
@@ -23,7 +22,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, num_samples_to_eva
     Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
 
     for i in range(num_samples_to_eval):
-        img = data_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
+        img = data_loader.dataset[i]['image'].unsqueeze_(0)
         pose_labels = data_loader.dataset[i]['pose_data']
         pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
 
@@ -55,7 +54,7 @@ def calculate_rmse(data_subset_type, model):
     cumulative_rmse = 0
 
     for i in range(len(data_loader)):
-        img = data_loader.dataset[i]['image'].unsqueeze_(0).unsqueeze_(0)
+        img = data_loader.dataset[i]['image'].unsqueeze_(0)
         pose_labels = data_loader.dataset[i]['pose_data'].numpy()
         pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV).squeeze(
             0) + settings.MAZE_SPEED_MEAN
@@ -69,7 +68,7 @@ def calculate_rmse(data_subset_type, model):
 def do_quick_evaluation(model_path):
     start_time = time.time()
     model = settings.MODEL
-    model.load_state_dict(torch.load(model_path))
+    model = model.load_from_checkpoint(model_path)
     model.eval()
     print("Loaded model from", model_path, "-> ready to evaluate.")
 
@@ -89,7 +88,7 @@ def do_quick_evaluation(model_path):
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
-    path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, "_checkpoint.pt")
+    path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, settings.ARCHITECTURE_TYPE, ".ckpt")
     do_quick_evaluation(model_path=path_to_model)
 
 
