@@ -1,6 +1,7 @@
 # Project-specific settings live here.
-from lightning import LeNetLightningTemplateModel, ResNetLightningTemplateModel
-from resnet import resnet18
+# from lightning import LeNetLightningTemplateModel, ResNetLightningTemplateModel
+from lenet import LeNet
+from resnet import ResNet
 
 import pytorch_lightning as pl
 
@@ -39,14 +40,14 @@ MAZE_SPEED_STD_DEV = 1
 LENET_STR = "LeNet"
 RESNET_STR = "ResNet"
 
-# ARCHITECTURE_TYPE = LENET_STR
-ARCHITECTURE_TYPE = RESNET_STR
+ARCHITECTURE_TYPE = LENET_STR
+# ARCHITECTURE_TYPE = RESNET_STR
 MODEL = None
 
-if ARCHITECTURE_TYPE == LENET_STR:
-    MODEL = LeNetLightningTemplateModel()
-elif ARCHITECTURE_TYPE == RESNET_STR:
-    MODEL = ResNetLightningTemplateModel()
+# if ARCHITECTURE_TYPE == LENET_STR:
+#     MODEL = LeNet()
+# elif ARCHITECTURE_TYPE == RESNET_STR:
+#     MODEL = ResNet()
 
 LEARNING_RATE = 1e-4
 
