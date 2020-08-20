@@ -106,11 +106,11 @@ class LeNet(pl.LightningModule):
 
         # MODEL specific
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--learning_rate', default=1e-4, type=float)
-        parser.add_argument('--batch_size', default=64, type=int)
+        parser.add_argument('--learning_rate', default=settings.LEARNING_RATE, type=float)
+        parser.add_argument('--batch_size', default=settings.BATCH_SIZE, type=int)
 
         # training specific (for this model)
-        parser.add_argument('--max_nb_epochs', default=10, type=int)
+        parser.add_argument('--max_num_epochs', default=settings.MAX_EPOCHS, type=int)
 
         # program specific
         # parser.default_root_dir = settings.MAZE_MODEL_DIR

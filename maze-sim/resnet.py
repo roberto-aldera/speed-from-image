@@ -240,14 +240,14 @@ class ResNet(pl.LightningModule):
         return {'test_loss': avg_loss, 'log': logs, 'progress_bar': logs}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=settings.LEARNING_RATE)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
 
     def train_dataloader(self):
         data_transform_for_training = transforms.Compose([ToTensor(), Normalise()])
         train_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                     data_subset_type=settings.TRAIN_SUBSET,
                                     transform=data_transform_for_training)
-        return DataLoader(train_dataset, batch_size=64,
+        return DataLoader(train_dataset, batch_size=self.hparams.batch_size,
                           shuffle=True, num_workers=4, collate_fn=CollateFn)
 
     def val_dataloader(self):
@@ -255,7 +255,7 @@ class ResNet(pl.LightningModule):
         val_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                   data_subset_type=settings.VAL_SUBSET,
                                   transform=data_transform_for_evaluation)
-        return DataLoader(val_dataset, batch_size=64,
+        return DataLoader(val_dataset, batch_size=self.hparams.batch_size,
                           shuffle=False, num_workers=4, collate_fn=CollateFn)
 
     def test_dataloader(self):
@@ -263,7 +263,7 @@ class ResNet(pl.LightningModule):
         test_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                    data_subset_type=settings.TEST_SUBSET,
                                    transform=data_transform_for_evaluation)
-        return DataLoader(test_dataset, batch_size=64,
+        return DataLoader(test_dataset, batch_size=self.hparams.batch_size,
                           shuffle=False, num_workers=4, collate_fn=CollateFn)
 
     @staticmethod
@@ -273,11 +273,11 @@ class ResNet(pl.LightningModule):
         """
         # MODEL specific
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--learning_rate', default=1e-4, type=float)
-        parser.add_argument('--batch_size', default=32, type=int)
+        parser.add_argument('--learning_rate', default=settings.LEARNING_RATE, type=float)
+        parser.add_argument('--batch_size', default=settings.BATCH_SIZE, type=int)
 
         # training specific (for this model)
-        parser.add_argument('--max_nb_epochs', default=10, type=int)
+        parser.add_argument('--max_num_epochs', default=settings.MAX_EPOCHS, type=int)
 
         # program specific
         # parser.add_argument('--default_root_dir', default=settings.MAZE_MODEL_DIR, type=str)

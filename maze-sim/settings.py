@@ -49,7 +49,10 @@ MODEL = None
 # elif ARCHITECTURE_TYPE == RESNET_STR:
 #     MODEL = ResNet()
 
+# Training parameters
+MAX_EPOCHS = 4
 LEARNING_RATE = 1e-4
+BATCH_SIZE = 64
 
 # Paths
 ROOT_DIR = "/workspace/data/speed-from-image/"
