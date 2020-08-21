@@ -1,8 +1,4 @@
 # Project-specific settings live here.
-# from lightning import LeNetLightningTemplateModel, ResNetLightningTemplateModel
-from lenet import LeNet
-from resnet import ResNet
-
 import pytorch_lightning as pl
 
 # Ensure reproducibility
@@ -37,20 +33,11 @@ MAZE_SPEED_MEAN = 0
 MAZE_SPEED_STD_DEV = 1
 
 # Models
-LENET_STR = "LeNet"
-RESNET_STR = "ResNet"
-
-ARCHITECTURE_TYPE = LENET_STR
-# ARCHITECTURE_TYPE = RESNET_STR
-MODEL = None
-
-# if ARCHITECTURE_TYPE == LENET_STR:
-#     MODEL = LeNet()
-# elif ARCHITECTURE_TYPE == RESNET_STR:
-#     MODEL = ResNet()
+ARCHITECTURE_TYPE = "lenet"
+# ARCHITECTURE_TYPE = "resnet"
 
 # Training parameters
-MAX_EPOCHS = 4
+MAX_EPOCHS = 5
 LEARNING_RATE = 1e-4
 BATCH_SIZE = 64
 
@@ -58,4 +45,4 @@ BATCH_SIZE = 64
 ROOT_DIR = "/workspace/data/speed-from-image/"
 MAZE_IMAGE_DIR = ROOT_DIR + "maze-images/"
 MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
-MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/" + ARCHITECTURE_TYPE + "/"
+MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/"

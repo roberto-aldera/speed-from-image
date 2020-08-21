@@ -27,6 +27,7 @@ if __name__ == '__main__':
     hparams = parser.parse_args()
 
     # pick model
+    model = None
     if hparams.model_name == 'lenet':
         model = LeNet(hparams)
     elif hparams.model_name == 'resnet':
@@ -41,8 +42,8 @@ if __name__ == '__main__':
     path_to_model = "%s%s%s" % (settings.MAZE_MODEL_DIR, hparams.model_name, ".ckpt")
     trainer.save_checkpoint(path_to_model)
 
-    # do_quick_evaluation(model_path=path_to_model)
-    # trainer.test()
-
     print("Finished Training")
     print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
+
+    do_quick_evaluation(hparams, model, path_to_model)
+    # trainer.test()
