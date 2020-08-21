@@ -51,8 +51,8 @@ def calculate_rmse(data_subset_type, model):
     dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                           data_subset_type=data_subset_type,
                           transform=data_transform_for_evaluation)
-    data_loader = DataLoader(dataset, batch_size=1,
-                             shuffle=False, num_workers=1)
+    data_loader = DataLoader(dataset, batch_size=1,  # not sure if batch size here needs to be only 1
+                             shuffle=False, num_workers=4)
     print("RMSE for", data_subset_type, "set:")
     cumulative_rmse = 0
 

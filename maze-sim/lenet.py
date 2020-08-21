@@ -21,6 +21,10 @@ class LeNet(pl.LightningModule):
         self.fc1 = nn.Linear(in_features=576, out_features=400)
         self.fc2 = nn.Linear(in_features=400, out_features=100)
         self.fc3 = nn.Linear(in_features=100, out_features=settings.MAX_ITERATIONS * settings.NUM_POSE_DIMS)
+        if self.hparams.dropout > 0:
+            self.fc3 = nn.Sequential(nn.Dropout(self.hparams.dropout),
+                                     nn.Linear(in_features=100,
+                                               out_features=settings.MAX_ITERATIONS * settings.NUM_POSE_DIMS))
 
     def forward(self, x):
         x = x.unsqueeze_(1)
@@ -108,6 +112,7 @@ class LeNet(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--learning_rate', default=settings.LEARNING_RATE, type=float)
         parser.add_argument('--batch_size', default=settings.BATCH_SIZE, type=int)
+        parser.add_argument('--dropout', default=0, type=float)
 
         # training specific (for this model)
         parser.add_argument('--max_num_epochs', default=settings.MAX_EPOCHS, type=int)

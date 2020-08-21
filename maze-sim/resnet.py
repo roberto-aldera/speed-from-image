@@ -145,6 +145,9 @@ class ResNet(pl.LightningModule):
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes * settings.NUM_POSE_DIMS)
+        if self.hparams.dropout > 0:
+            self.fc = nn.Sequential(nn.Dropout(self.hparams.dropout),
+                                    nn.Linear(512 * block.expansion, num_classes * settings.NUM_POSE_DIMS))
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -275,6 +278,7 @@ class ResNet(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--learning_rate', default=settings.LEARNING_RATE, type=float)
         parser.add_argument('--batch_size', default=settings.BATCH_SIZE, type=int)
+        parser.add_argument('--dropout', default=0, type=float)
 
         # training specific (for this model)
         parser.add_argument('--max_num_epochs', default=settings.MAX_EPOCHS, type=int)
