@@ -16,7 +16,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     x_robot = x_start
     goal_error = x_goal - x_robot
     robot_xy = np.array(x_robot)
-    robot_th = np.array(0)
+    robot_th = np.array(np.pi / 2)  # robot is facing 'upwards' when moving forwards
     # Generate obstacles in random positions across the map
     # obstacles = np.random.randint(0, settings.MAP_SIZE - 1, size=(2, settings.MAX_NUM_OBSTACLES))
     obstacles = [[random.randrange(0, settings.MAP_SIZE - 1, settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for x in
@@ -60,7 +60,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     if save_plots:
         plt.figure(figsize=(10, 10))
         plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
-        plt.plot(robot_xy[0, :], robot_xy[1, :], 'b^')
+        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th)
         plt.plot(x_start[0], x_start[1], 'mo')
         plt.plot(x_goal[0], x_goal[1], 'go')
         plt.grid()
@@ -87,6 +87,20 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     img.save("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_", idx, ".png"))
 
     return robot_xy, robot_th
+
+
+def draw_robot_poses(x_poses, y_poses, thetas):
+    scale = 0.25
+    basic_triangle = np.array([[-1, -1], [0, 2], [1, -1]]) * scale
+
+    for i in range(len(x_poses)):
+        th = -(thetas[i] - np.pi / 2)
+        rotation_matrix = np.array([[-np.cos(th), np.sin(th)], [np.sin(th), np.cos(th)]])
+        triangle_vertices = np.matmul(basic_triangle, rotation_matrix)
+        triangle_vertices[:, 0] = triangle_vertices[:, 0] + x_poses[i]
+        triangle_vertices[:, 1] = triangle_vertices[:, 1] + y_poses[i]
+        triangle = plt.Polygon(triangle_vertices)
+        plt.gca().add_patch(triangle)
 
 
 def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subset_type, save_plots=False):
