@@ -78,10 +78,10 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
         obstacles[0, i] - radius:obstacles[0, i] + radius + 1] = 255
 
     # Draw robot position
-    robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
-    robot_y = int(settings.MAZE_IMAGE_DIMENSION / 2)
-    data[robot_x - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1,
-    robot_y - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1] = 255
+    # robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
+    # robot_y = int(settings.MAZE_IMAGE_DIMENSION / 2)
+    # data[robot_x - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1,
+    # robot_y - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1] = 255
 
     img = Image.fromarray(data, 'L')
     img.save("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_", idx, ".png"))

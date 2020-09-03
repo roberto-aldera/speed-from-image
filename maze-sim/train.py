@@ -15,23 +15,29 @@ if __name__ == '__main__':
     parser = ArgumentParser(add_help=False)
     parser = pl.Trainer.add_argparse_args(parser)
 
-    parser.add_argument('--model_name', type=str, default='lenet', help='lenet or resnet')
+    parser.add_argument("--model_name", type=str, default="lenet", help="lenet or resnet")
+    parser.add_argument("--do_evaluation", type=str, default=False, help="Run evaluation script after training")
 
     temp_args, _ = parser.parse_known_args()
     # let the model add what it wants
-    if temp_args.model_name == 'lenet':
+    if temp_args.model_name == "lenet":
         parser = LeNet.add_model_specific_args(parser)
-    elif temp_args.model_name == 'resnet':
+    elif temp_args.model_name == "resnet":
         parser = ResNet.add_model_specific_args(parser)
 
     hparams = parser.parse_args()
 
     # pick model
     model = None
-    if hparams.model_name == 'lenet':
+    if hparams.model_name == "lenet":
         model = LeNet(hparams)
-    elif hparams.model_name == 'resnet':
+    elif hparams.model_name == "resnet":
         model = ResNet(hparams)
+
+    # trainer = pl.Trainer.from_argparse_args(hparams,
+    #                                         default_root_dir=settings.MAZE_MODEL_DIR,
+    #                                         max_epochs=hparams.max_num_epochs,
+    #                                         resume_from_checkpoint='/workspace/data/speed-from-image/maze-models/version_0.1/checkpoints/epoch=28.ckpt')
 
     trainer = pl.Trainer.from_argparse_args(hparams,
                                             default_root_dir=settings.MAZE_MODEL_DIR,
@@ -45,5 +51,6 @@ if __name__ == '__main__':
     print("Finished Training")
     print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-    do_quick_evaluation(hparams, model, path_to_model)
+    if hparams.do_evaluation:
+        do_quick_evaluation(hparams, model, path_to_model)
     # trainer.test()
