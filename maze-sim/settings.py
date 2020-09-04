@@ -1,5 +1,6 @@
 # Project-specific settings live here.
 import pytorch_lightning as pl
+import numpy as np
 
 # Ensure reproducibility
 pl.seed_everything(0)
@@ -10,8 +11,8 @@ VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
 # General dataset parameters
-TOTAL_SAMPLES = 1000
-TRAIN_RATIO = 0.7
+TOTAL_SAMPLES = 2000
+TRAIN_RATIO = 0.8
 VAL_RATIO = 0.1
 TEST_RATIO = 1 - (TRAIN_RATIO + VAL_RATIO)
 
@@ -29,12 +30,14 @@ VELOCITY_LIMIT = 0.5
 NUM_POSE_DIMS = 3
 ADDITIONAL_OBSTACLE_VISUAL_WEIGHT = 0
 ADDITIONAL_ROBOT_VISUAL_WEIGHT = 1
-MAZE_SPEED_MEAN = 0
-MAZE_SPEED_STD_DEV = 1
+MAZE_SPEED_MEAN = np.array([4.55932844e-01, 1.62530714e-04, - 4.14275714e-04])
+MAZE_SPEED_STD_DEV = np.array([0.07888052, 0.04509365, 0.16137534])
+# MAZE_SPEED_MEAN = np.array([0, 0, 0])
+# MAZE_SPEED_STD_DEV = np.array([1, 1, 1])
 
 # Models
-ARCHITECTURE_TYPE = "lenet"
-# ARCHITECTURE_TYPE = "resnet"
+# ARCHITECTURE_TYPE = "lenet"
+ARCHITECTURE_TYPE = "resnet"
 
 # Training parameters
 MAX_EPOCHS = 5

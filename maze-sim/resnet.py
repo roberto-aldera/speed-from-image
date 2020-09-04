@@ -254,7 +254,7 @@ class ResNet(pl.LightningModule):
                           shuffle=True, num_workers=4, collate_fn=CollateFn)
 
     def val_dataloader(self):
-        data_transform_for_evaluation = transforms.Compose([ToTensor()])
+        data_transform_for_evaluation = transforms.Compose([ToTensor(), Normalise()])
         val_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                   data_subset_type=settings.VAL_SUBSET,
                                   transform=data_transform_for_evaluation)
@@ -262,7 +262,7 @@ class ResNet(pl.LightningModule):
                           shuffle=False, num_workers=4, collate_fn=CollateFn)
 
     def test_dataloader(self):
-        data_transform_for_evaluation = transforms.Compose([ToTensor()])
+        data_transform_for_evaluation = transforms.Compose([ToTensor(), Normalise()])
         test_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                    data_subset_type=settings.TEST_SUBSET,
                                    transform=data_transform_for_evaluation)

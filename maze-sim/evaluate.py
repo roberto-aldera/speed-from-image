@@ -27,15 +27,16 @@ def generate_subset_evaluation_plots(data_subset_type, model, model_name, num_sa
     for i in range(num_samples_to_eval):
         img = data_loader.dataset[i]['image'].unsqueeze_(0)
         pose_labels = data_loader.dataset[i]['pose_data']
-        pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
-
+        pose_from_model = model(img).detach().numpy()
+        pose_estimate = np.transpose(
+            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
         plt.figure(figsize=(15, 5))
         plt.plot(pose_labels[0], 'r--', alpha=0.5, label="dx ground truth")
         plt.plot(pose_labels[1], 'g--', alpha=0.5, label="dy ground truth")
         plt.plot(pose_labels[2], 'b--', alpha=0.5, label="dth ground truth")
-        plt.plot(pose_estimate[0, 0], 'r', label="dx prediction")
-        plt.plot(pose_estimate[0, 1], 'g', label="dy prediction")
-        plt.plot(pose_estimate[0, 2], 'b', label="dth prediction")
+        plt.plot(pose_estimate[0], 'r', label="dx prediction")
+        plt.plot(pose_estimate[1], 'g', label="dy prediction")
+        plt.plot(pose_estimate[2], 'b', label="dth prediction")
 
         plt.ylim(-1, 1)
         plt.xlabel("Index")
@@ -59,8 +60,9 @@ def calculate_rmse(data_subset_type, model):
     for i in range(len(data_loader)):
         img = data_loader.dataset[i]['image'].unsqueeze_(0)
         pose_labels = data_loader.dataset[i]['pose_data'].numpy()
-        pose_estimate = ((model(img).detach().numpy()) * settings.MAZE_SPEED_STD_DEV).squeeze(
-            0) + settings.MAZE_SPEED_MEAN
+        pose_from_model = model(img).detach().numpy()
+        pose_estimate = np.transpose(
+            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
         # print("Pose labels:", pose_labels)
         # print("Pose estimate:", pose_estimate)
         rmse = np.sqrt(np.mean(np.square(pose_labels - pose_estimate) / len(pose_labels), axis=1))
