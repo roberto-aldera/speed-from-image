@@ -24,14 +24,14 @@ class MazeDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        ratio = 0
+        subset_size = 0
         if self.data_subset_type == settings.TRAIN_SUBSET:
-            ratio = settings.TRAIN_RATIO
+            subset_size = settings.TRAIN_SET_SIZE
         elif self.data_subset_type == settings.VAL_SUBSET:
-            ratio = settings.VAL_RATIO
+            subset_size = settings.VAL_SET_SIZE
         elif self.data_subset_type == settings.TEST_SUBSET:
-            ratio = settings.TEST_RATIO
-        return int(ratio * settings.TOTAL_SAMPLES)
+            subset_size = settings.TEST_SET_SIZE
+        return subset_size
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
