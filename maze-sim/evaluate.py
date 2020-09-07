@@ -5,6 +5,7 @@ import numpy as np
 from pathlib import Path
 import time
 from argparse import ArgumentParser
+import logging
 
 import settings
 from dataset_loader import MazeDataset, ToTensor
@@ -14,13 +15,13 @@ from resnet import ResNet
 data_transform_for_evaluation = transforms.Compose([ToTensor()])
 
 
-def generate_subset_evaluation_plots(data_subset_type, model, model_name, num_samples_to_eval):
+def generate_subset_evaluation_plots(data_subset_type, model, results_path, num_samples_to_eval):
     dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                           data_subset_type=data_subset_type,
                           transform=data_transform_for_evaluation)
     data_loader = DataLoader(dataset, batch_size=1,
                              shuffle=False, num_workers=1)
-    subset_fig_path = settings.MAZE_RESULTS_DIR + model_name + "/" + data_subset_type + "/"
+    subset_fig_path = results_path + data_subset_type + "/"
     Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
     print("Saving evaluation plots to:", subset_fig_path)
 
@@ -48,13 +49,13 @@ def generate_subset_evaluation_plots(data_subset_type, model, model_name, num_sa
         plt.close()
 
 
-def calculate_rmse(data_subset_type, model):
+def calculate_rmse(data_subset_type, model, logger):
     dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                           data_subset_type=data_subset_type,
                           transform=data_transform_for_evaluation)
     data_loader = DataLoader(dataset, batch_size=1,  # not sure if batch size here needs to be only 1
                              shuffle=False, num_workers=4)
-    print("RMSE for", data_subset_type, "set:")
+    logger.info("RMSE for " + str(len(data_loader)) + " " + data_subset_type + " set examples:")
     cumulative_rmse = 0
 
     for i in range(len(data_loader)):
@@ -63,29 +64,34 @@ def calculate_rmse(data_subset_type, model):
         pose_from_model = model(img).detach().numpy()
         pose_estimate = np.transpose(
             (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
-        # print("Pose labels:", pose_labels)
-        # print("Pose estimate:", pose_estimate)
         rmse = np.sqrt(np.mean(np.square(pose_labels - pose_estimate) / len(pose_labels), axis=1))
         cumulative_rmse += rmse
-    print(cumulative_rmse / len(data_loader))
+    logger.info(cumulative_rmse / len(data_loader))
 
 
 def do_quick_evaluation(hparams, model, model_path):
     start_time = time.time()
+    current_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+    results_path = settings.MAZE_RESULTS_DIR + hparams.model_name + "/" + current_time + "/"
+    Path(results_path).mkdir(parents=True, exist_ok=True)
     model = model.load_from_checkpoint(model_path)
     model.eval()
-    print("Loaded model from", model_path, "-> ready to evaluate.")
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(format='%(message)s', filename=(results_path + "rmse_results.txt"), level=logging.INFO)
+    logger.addHandler(logging.StreamHandler())
+    logger.info("Loaded model from " + model_path + " -> ready to evaluate.")
 
     print("Generating evaluation plots...")
     num_samples = 10
-    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, hparams.model_name, num_samples)
-    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, hparams.model_name, num_samples)
-    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, hparams.model_name, num_samples)
+    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
 
     print("Calculating average RMSE (over entire subset)")
-    calculate_rmse(settings.TRAIN_SUBSET, model)
-    calculate_rmse(settings.VAL_SUBSET, model)
-    calculate_rmse(settings.TEST_SUBSET, model)
+
+    calculate_rmse(settings.TRAIN_SUBSET, model, logger)
+    calculate_rmse(settings.VAL_SUBSET, model, logger)
+    calculate_rmse(settings.TEST_SUBSET, model, logger)
 
     print("--- Evaluation execution time: %s seconds ---" % (time.time() - start_time))
 
