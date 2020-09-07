@@ -78,16 +78,17 @@ class Normalise(object):
 
 def main():
     # Define a main loop to run and show some example data if this script is run as main
-    data_transform_to_use = transforms.Compose([ToTensor(), Normalise()])
+    data_transform_raw = transforms.Compose([ToTensor()])
+    data_transform_scaled = transforms.Compose([ToTensor(), Normalise()])
     maze_dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                                data_subset_type=settings.TRAIN_SUBSET,
-                               transform=data_transform_to_use)
+                               transform=data_transform_raw)
     maze_elm_0 = maze_dataset[0]
     poses = np.array(maze_elm_0['pose_data'])
 
-    plot_figures = True
+    plot_figures = False
 
-    for maze_idx in range(1, 50):
+    for maze_idx in range(1, len(maze_dataset)):
         maze = maze_dataset[maze_idx]
         # print(maze_idx, maze['image'].shape, maze['pose_data'].shape)
         poses = np.append(poses, maze['pose_data'], axis=1)
