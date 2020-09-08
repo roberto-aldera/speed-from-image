@@ -89,6 +89,10 @@ def export_figures_for_poses(results_path, data_subset_type, model, num_samples)
     data_loader = DataLoader(dataset, batch_size=1,  # not sure if batch size here needs to be only 1
                              shuffle=False, num_workers=settings.NUM_CPUS)
 
+    subset_fig_path = results_path + data_subset_type + "/"
+    Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
+    print("Saving pose trajectory figures to:", subset_fig_path)
+
     x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
     x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE]).reshape(2, -1)
 
@@ -108,15 +112,20 @@ def export_figures_for_poses(results_path, data_subset_type, model, num_samples)
         predicted_x_robot, predicted_y_robot, predicted_th_robot = get_global_poses(x_start, pose_estimate)
 
         plt.figure(figsize=(10, 10))
-        plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
-        draw_robot_poses(x_robot, y_robot, th_robot)
-        plt.plot(predicted_x_robot, predicted_y_robot, '*')
-        plt.plot(x_start[0], x_start[1], 'mo')
-        plt.plot(x_goal[0], x_goal[1], 'go')
+        colours = ["red", "blue", "orange", "magenta", "green"]
+        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="obstacles")
+        draw_robot_poses(x_robot, y_robot, th_robot, colours[1])
+        draw_robot_poses(predicted_x_robot, predicted_y_robot, predicted_th_robot, colours[2])
+        plt.plot(x_start[0], x_start[1], "o", color=colours[3])
+        plt.plot(x_goal[0], x_goal[1], "o", color=colours[4])
         plt.grid()
         plt.xlim(0, settings.MAP_SIZE)
         plt.ylim(0, settings.MAP_SIZE)
-        plt.savefig("%s%s%s%s%i%s" % (results_path, "/", data_subset_type, "_maze_", idx, ".png"))
+        lines = [plt.Line2D([0], [0], color=c, linewidth=0, marker='.', markersize=20) for c in colours]
+        labels = ["Obstacles", "True pose", "Predicted pose", "Start", "Goal"]
+        plt.legend(lines, labels)
+        plt.title("%s%s%s" % ("Maze simulation from ", data_subset_type, " subset"))
+        plt.savefig("%s%s%s%s%i%s" % (subset_fig_path, "/", data_subset_type, "_maze_", idx, ".svg"))
         plt.close()
 
 
@@ -171,16 +180,18 @@ def do_quick_evaluation(hparams, model, model_path):
     print("Generating evaluation plots...")
     num_samples = 10
     export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
 
-    # generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
-    #
-    # print("Calculating average RMSE (over entire subset)")
-    #
-    # calculate_rmse(settings.TRAIN_SUBSET, model, logger)
-    # calculate_rmse(settings.VAL_SUBSET, model, logger)
-    # calculate_rmse(settings.TEST_SUBSET, model, logger)
+    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+
+    print("Calculating average RMSE (over entire subset)")
+
+    calculate_rmse(settings.TRAIN_SUBSET, model, logger)
+    calculate_rmse(settings.VAL_SUBSET, model, logger)
+    calculate_rmse(settings.TEST_SUBSET, model, logger)
 
     print("--- Evaluation execution time: %s seconds ---" % (time.time() - start_time))
 

@@ -67,7 +67,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     if save_plots:
         plt.figure(figsize=(10, 10))
         plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
-        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th)
+        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th, "blue")
         plt.plot(x_start[0], x_start[1], 'mo')
         plt.plot(x_goal[0], x_goal[1], 'go')
         plt.grid()
@@ -96,7 +96,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     return robot_xy, robot_th
 
 
-def draw_robot_poses(x_poses, y_poses, thetas):
+def draw_robot_poses(x_poses, y_poses, thetas, colour):
     scale = 0.25
     basic_triangle = np.array([[-1, -1], [0, 2], [1, -1]]) * scale
 
@@ -106,7 +106,7 @@ def draw_robot_poses(x_poses, y_poses, thetas):
         triangle_vertices = np.matmul(basic_triangle, rotation_matrix)
         triangle_vertices[:, 0] = triangle_vertices[:, 0] + x_poses[i]
         triangle_vertices[:, 1] = triangle_vertices[:, 1] + y_poses[i]
-        triangle = plt.Polygon(triangle_vertices)
+        triangle = plt.Polygon(triangle_vertices, color=colour, alpha=1.0, fill=False)
         plt.gca().add_patch(triangle)
 
 

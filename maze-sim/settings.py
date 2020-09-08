@@ -42,8 +42,8 @@ MAZE_SPEED_MEAN = np.array([3.37913594e-01, -3.45118750e-04, 1.04003125e-04])
 MAZE_SPEED_STD_DEV = np.array([0.12659675, 0.02111636, 0.08515108])
 
 # Models
-ARCHITECTURE_TYPE = "lenet"
-# ARCHITECTURE_TYPE = "resnet"
+# ARCHITECTURE_TYPE = "lenet"
+ARCHITECTURE_TYPE = "resnet"
 
 # Training parameters
 NUM_CPUS = 8
