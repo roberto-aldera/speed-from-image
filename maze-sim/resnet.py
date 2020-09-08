@@ -251,7 +251,7 @@ class ResNet(pl.LightningModule):
                                     data_subset_type=settings.TRAIN_SUBSET,
                                     transform=data_transform_for_training)
         return DataLoader(train_dataset, batch_size=self.hparams.batch_size,
-                          shuffle=True, num_workers=4, collate_fn=CollateFn)
+                          shuffle=True, num_workers=settings.NUM_CPUS, collate_fn=CollateFn)
 
     def val_dataloader(self):
         data_transform_for_evaluation = transforms.Compose([ToTensor(), Normalise()])
@@ -259,7 +259,7 @@ class ResNet(pl.LightningModule):
                                   data_subset_type=settings.VAL_SUBSET,
                                   transform=data_transform_for_evaluation)
         return DataLoader(val_dataset, batch_size=self.hparams.batch_size,
-                          shuffle=False, num_workers=4, collate_fn=CollateFn)
+                          shuffle=False, num_workers=settings.NUM_CPUS, collate_fn=CollateFn)
 
     def test_dataloader(self):
         data_transform_for_evaluation = transforms.Compose([ToTensor(), Normalise()])
@@ -267,7 +267,7 @@ class ResNet(pl.LightningModule):
                                    data_subset_type=settings.TEST_SUBSET,
                                    transform=data_transform_for_evaluation)
         return DataLoader(test_dataset, batch_size=self.hparams.batch_size,
-                          shuffle=False, num_workers=4, collate_fn=CollateFn)
+                          shuffle=False, num_workers=settings.NUM_CPUS, collate_fn=CollateFn)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
