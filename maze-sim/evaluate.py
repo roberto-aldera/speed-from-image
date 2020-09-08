@@ -125,7 +125,7 @@ def export_figures_for_poses(results_path, data_subset_type, model, num_samples)
         labels = ["Obstacles", "True pose", "Predicted pose", "Start", "Goal"]
         plt.legend(lines, labels)
         plt.title("%s%s%s" % ("Maze simulation from ", data_subset_type, " subset"))
-        plt.savefig("%s%s%s%s%i%s" % (subset_fig_path, "/", data_subset_type, "_maze_", idx, ".svg"))
+        plt.savefig("%s%s%s%s%i%s" % (subset_fig_path, "/", data_subset_type, "_maze_", idx, ".pdf"))
         plt.close()
 
 
