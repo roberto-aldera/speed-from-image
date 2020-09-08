@@ -32,6 +32,9 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     # Remove obstacles directly ahead of starting position
     obstacles = np.delete(obstacles, np.argwhere(obstacles[0, :] == x_start[0]), axis=1)
     num_obstacles = obstacles.shape[1]  # account for the loss of the obstacles that were too close
+    # Export obstacle location to disk
+    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/obstacles_", data_subset_type, "_", idx, ".csv")),
+               obstacles, delimiter=",")
 
     while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
@@ -163,7 +166,7 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = True
+    save_plots = False
 
     for idx in range(num_samples):
         xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
@@ -174,9 +177,10 @@ def generate_maze_samples(num_samples, data_subset_type):
           "and written to:", split_data_path)
 
 
-start_time = time.time()
+if __name__ == "__main__":
+    start_time = time.time()
 
-generate_maze_samples(settings.TRAIN_SET_SIZE, settings.TRAIN_SUBSET)
-generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
-generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
-print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))
+    generate_maze_samples(settings.TRAIN_SET_SIZE, settings.TRAIN_SUBSET)
+    generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
+    generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
+    print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))
