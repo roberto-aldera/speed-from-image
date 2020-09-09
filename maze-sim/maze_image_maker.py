@@ -16,7 +16,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     x_robot = x_start
     goal_error = x_goal - x_robot
     robot_xy = np.array(x_robot)
-    robot_th = np.array(np.pi / 2)  # robot is facing 'upwards' when moving forwards
+    robot_th = np.array([np.pi / 2])  # robot is facing 'upwards' when moving forwards
     # Generate obstacles in random positions across the map
     obstacles_x = [random.randrange(settings.MAX_OBSTACLE_X_POSITION_FROM_CENTRE,
                                     (settings.MAP_SIZE - 1) - settings.MAX_OBSTACLE_X_POSITION_FROM_CENTRE,
@@ -38,6 +38,9 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
 
     while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
+        robot_angle_from_vertical = (robot_th[-1] - robot_th[0])
+        relative_angles = -np.arctan2(relative_positions[0, :], relative_positions[1, :]) - robot_angle_from_vertical
+
         for i in range(relative_positions.shape[1]):
             if np.all(relative_positions[:, i] == [0, 0]):
                 print("Error: obstacle and robot are both at position:", obstacles[:, i],
@@ -46,11 +49,16 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
                 print("k = ", k)
         distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
         idx_proximal = distances < settings.OBSTACLE_INFLUENCE_RADIUS
+
         if any(idx_proximal):
             rho = np.tile(distances[idx_proximal], (2, 1))
             v = relative_positions[:, idx_proximal]
             d_rho_dx = -v / rho
             f_proximity = (1 / rho - 1 / settings.OBSTACLE_INFLUENCE_RADIUS) * 1 / (np.square(rho)) * d_rho_dx
+            # Force due to obstacle "visibility" (high if in front of robot, low if to the side or behind)
+            angle_influence = (np.pi - np.abs(relative_angles)) / np.pi
+            # angle_influence[angle_influence < 0.4] = 0
+            f_proximity *= angle_influence
             f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=1).reshape(-1, 1)
         else:
             f_objects = np.array([0, 0]).reshape(-1, 1)
@@ -73,7 +81,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
         plt.grid()
         plt.xlim(0, settings.MAP_SIZE)
         plt.ylim(0, settings.MAP_SIZE)
-        plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_maze_", idx, ".png"))
+        plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_maze_", idx, ".pdf"))
         plt.close()
     print("Maze sim complete for", data_subset_type, "index:", idx)
 
