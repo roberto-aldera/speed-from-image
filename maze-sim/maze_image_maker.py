@@ -31,6 +31,13 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=1)
     # Remove obstacles directly ahead of starting position
     obstacles = np.delete(obstacles, np.argwhere(obstacles[0, :] == x_start[0]), axis=1)
+
+    # CUSTOM OBSTACLES FOR DEBUGGING ONLY
+    # obstacles = np.array([[15, 14, 15, 16], [18,  21, 20, 19]])
+    # obstacles = np.array([[14, 15, 16, 17], [20, 20, 20, 20]])
+    # obstacles = np.array([[12, 13, 14, 15], [20, 20, 20, 20]])
+    # obstacles = np.append(obstacles, np.array([[17, 18, 19, 20], [23, 23, 23, 23]]), axis=1)
+
     num_obstacles = obstacles.shape[1]  # account for the loss of the obstacles that were too close
     # Export obstacle location to disk
     np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/obstacles_", data_subset_type, "_", idx, ".csv")),
@@ -38,8 +45,6 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
 
     while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
-        robot_angle_from_vertical = (robot_th[-1] - robot_th[0])
-        relative_angles = -np.arctan2(relative_positions[0, :], relative_positions[1, :]) - robot_angle_from_vertical
 
         for i in range(relative_positions.shape[1]):
             if np.all(relative_positions[:, i] == [0, 0]):
@@ -55,16 +60,31 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
             v = relative_positions[:, idx_proximal]
             d_rho_dx = -v / rho
             f_proximity = (1 / rho - 1 / settings.OBSTACLE_INFLUENCE_RADIUS) * 1 / (np.square(rho)) * d_rho_dx
+
             # Force due to obstacle "visibility" (high if in front of robot, low if to the side or behind)
+            robot_angle_from_vertical = (robot_th[-1] - robot_th[0])
+            relative_angles = -np.arctan2(relative_positions[0, idx_proximal],
+                                          relative_positions[1, idx_proximal]) - robot_angle_from_vertical
+            relative_angles[relative_angles > np.pi] = relative_angles[relative_angles > np.pi] - 2 * np.pi
+            relative_angles[relative_angles < -np.pi] = 2 * np.pi - relative_angles[relative_angles < -np.pi]
             angle_influence = (np.pi - np.abs(relative_angles)) / np.pi
-            # angle_influence[angle_influence < 0.4] = 0
-            f_proximity *= angle_influence
+
+            # Force due to relevance in the goal quest
+            relevance_to_mission = np.array([relative_positions[1, idx_proximal]])
+            relevance_to_mission[relevance_to_mission < 0] = 0
+            relevance_to_mission[relevance_to_mission > 0] = 1
+
+            f_proximity *= (1 / 3 + angle_influence / 3 + relevance_to_mission / 3)
             f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=1).reshape(-1, 1)
         else:
             f_objects = np.array([0, 0]).reshape(-1, 1)
         f_goal = settings.GOAL_FORCE_MULTIPLIER * goal_error / np.linalg.norm(goal_error)
         f_total = f_goal + f_objects
-        f_total = f_total / np.linalg.norm(f_total) * min(settings.VELOCITY_LIMIT, np.linalg.norm(f_total))
+        # This takes into account the natural slow-down that should happen when the robot is near obstacles (caution)
+        max_velocity = min(settings.VELOCITY_LIMIT,
+                           settings.NOMINAL_VELOCITY * min(distances) / settings.PROXIMITY_TO_OBSTACLE_CAUTION_FACTOR)
+        f_total = f_total / np.linalg.norm(f_total) * min(max_velocity, np.linalg.norm(f_total))
+
         theta_robot = math.atan2(f_total[1], f_total[0])
         x_robot = x_robot + f_total
         robot_xy = np.append(robot_xy, x_robot, axis=1)
@@ -115,6 +135,7 @@ def draw_robot_poses(x_poses, y_poses, thetas, colour):
         triangle_vertices[:, 0] = triangle_vertices[:, 0] + x_poses[i]
         triangle_vertices[:, 1] = triangle_vertices[:, 1] + y_poses[i]
         triangle = plt.Polygon(triangle_vertices, color=colour, alpha=1.0, fill=False)
+        plt.gca().plot(x_poses[i], y_poses[i], '.', color=colour, alpha=1.0)
         plt.gca().add_patch(triangle)
 
 
