@@ -89,6 +89,8 @@ def main():
     plot_figures = False
 
     for maze_idx in range(1, len(maze_dataset)):
+        if maze_idx % 100 == 0:
+            print("Running dataset loader main function for sample index:", maze_idx)
         maze = maze_dataset[maze_idx]
         # print(maze_idx, maze['image'].shape, maze['pose_data'].shape)
         poses = np.append(poses, maze['pose_data'], axis=1)

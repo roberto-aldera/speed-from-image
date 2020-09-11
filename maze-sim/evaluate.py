@@ -60,6 +60,8 @@ def calculate_rmse(data_subset_type, model, logger):
     cumulative_rmse = 0
 
     for i in range(len(data_loader)):
+        if i % 100 == 0:
+            print("Running RMSE calculation for sample index:", i)
         #     now = time.time()
         data_at_idx = data_loader.dataset[i]  # this is slow
         # t1 = time.time() - now
