@@ -1,10 +1,7 @@
-from pathlib import Path
 import numpy as np
 import pdb
 
-from matplotlib import pyplot as plt
-
-LENGTHS = [2, 4, 6, 8]
+LENGTHS = [1, 3, 6]
 
 
 def compose_se2(x, y, angle):
@@ -56,23 +53,26 @@ def get_errors(gt, est):
         est_poses.append(se2)
 
     for length in LENGTHS:
-        print("Length segment:", length)
+        print("Evaluating on segment of length:", length)
         err_tr_tmp = []
         err_d_tmp = []
-        for i in range(len(gt_poses)):
-            j = last_frame_from_len(dists[i:], length)
-            if j is None:
+        for start_idx in range(len(gt_poses)):
+            end_idx = last_frame_from_len(dists[start_idx:], length)
+            if end_idx is None:
                 break
-            j += i
+            end_idx += start_idx
 
-            print("i:", i, "j:", j)
+            print("start_idx:", start_idx, "end_idx:", end_idx)
 
-            se2_gt = np.linalg.inv(gt_poses[i]) @ gt_poses[j]
-            se2_est = np.linalg.inv(est_poses[i]) @ est_poses[j]
+            se2_gt = np.linalg.inv(gt_poses[start_idx]) @ gt_poses[end_idx]
+            se2_est = np.linalg.inv(est_poses[start_idx]) @ est_poses[end_idx]
             error_se2 = np.linalg.inv(se2_est) @ se2_gt
 
             err_tr_tmp.append(np.sqrt(error_se2[0, 1] ** 2 + error_se2[0, 2] ** 2))
             err_d_tmp.append(abs(np.arctan2(error_se2[0, 1], error_se2[0, 0])))
+        if len(err_tr_tmp) < 1:
+            print("No segments of length:", length)
+            return None, None  # this is not a graceful way of handling longer segments, fix this
         print("err_tr_tmp:", err_tr_tmp)
         print("err_d_tmp:", err_d_tmp)
         error_tr.append(np.mean(err_tr_tmp) / length)
@@ -84,19 +84,30 @@ def main():
     errors_t = []
     errors_d = []
 
-    data_folder = "/workspace/Desktop/"
-    gt_df = np.genfromtxt(data_folder + "speed_labels_training_0.csv", delimiter=",")
-    est_df = np.genfromtxt(data_folder + "speed_labels_training_1.csv", delimiter=",")
+    # data_folder = "/workspace/Desktop/"
+    # ground_truth_data = np.genfromtxt(data_folder + "speed_labels_training_0.csv", delimiter=",")
+    # estimated_data = np.genfromtxt(data_folder + "speed_labels_training_1.csv", delimiter=",")
 
-    # print("gt_df:", gt_df)
-    err_t, err_d = get_errors(gt_df, est_df)
+    x_vals = np.repeat(1, 5)
+    y_vals = np.repeat(0.1, 5)
+    th_vals = np.repeat(0.01, 5)
+    ground_truth_data = np.array([x_vals, y_vals, th_vals])
+    print(ground_truth_data)
+    estimated_data = np.array(ground_truth_data)
+    estimated_data[0, :] += 0.1
+    estimated_data[1, :] += 0.05
+    estimated_data[2, :] += 0.01
+    print(estimated_data)
+
+    err_t, err_d = get_errors(ground_truth_data, estimated_data)
+    print(err_t)
     errors_t.append(err_t)
     errors_d.append(err_d)
 
-    err_t_avg = np.array(err_t).mean()
-    err_d_avg = np.array(err_d).mean()
-    print("err_t_avg:", err_t_avg)
-    print("err_d_avg:", err_d_avg)
+    # err_t_avg = np.array(err_t).mean()
+    # err_d_avg = np.array(err_d).mean()
+    # print("err_t_avg:", err_t_avg)
+    # print("err_d_avg:", err_d_avg)
 
 
 if __name__ == '__main__':
