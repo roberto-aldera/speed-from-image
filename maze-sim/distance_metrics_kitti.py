@@ -1,7 +1,4 @@
 import numpy as np
-import pdb
-
-LENGTHS = [1, 3, 6]
 
 
 def compose_se2(x, y, angle):
@@ -35,27 +32,25 @@ def last_frame_from_len(dist, length):
     return None
 
 
-def get_errors(gt, est):
-    error_tr = []
-    error_d = []
-
-    dists = trajectory_distances(gt)
-
+def get_errors(ground_truth_poses, estimated_poses, segment_lengths):
+    translational_error = []
+    yaw_error = []
+    dists = trajectory_distances(ground_truth_poses)
     gt_poses = [np.eye(3)]
     est_poses = [np.eye(3)]
 
-    for i in range(0, gt.shape[1]):
-        se2 = gt_poses[-1] @ compose_se2(gt[0, i], gt[1, i], gt[2, i])
+    for i in range(0, ground_truth_poses.shape[1]):
+        se2 = gt_poses[-1] @ compose_se2(ground_truth_poses[0, i], ground_truth_poses[1, i], ground_truth_poses[2, i])
         gt_poses.append(se2)
 
-    for i in range(0, est.shape[1]):
-        se2 = est_poses[-1] @ compose_se2(est[0, i], est[1, i], est[2, i])
+    for i in range(0, estimated_poses.shape[1]):
+        se2 = est_poses[-1] @ compose_se2(estimated_poses[0, i], estimated_poses[1, i], estimated_poses[2, i])
         est_poses.append(se2)
 
-    for length in LENGTHS:
+    for length in segment_lengths:
         print("Evaluating on segment of length:", length)
-        err_tr_tmp = []
-        err_d_tmp = []
+        trans_error_per_segment = []
+        yaw_error_per_segment = []
         for start_idx in range(len(gt_poses)):
             end_idx = last_frame_from_len(dists[start_idx:], length)
             if end_idx is None:
@@ -63,51 +58,68 @@ def get_errors(gt, est):
             end_idx += start_idx
 
             print("start_idx:", start_idx, "end_idx:", end_idx)
-
             se2_gt = np.linalg.inv(gt_poses[start_idx]) @ gt_poses[end_idx]
             se2_est = np.linalg.inv(est_poses[start_idx]) @ est_poses[end_idx]
             error_se2 = np.linalg.inv(se2_est) @ se2_gt
 
-            err_tr_tmp.append(np.sqrt(error_se2[0, 1] ** 2 + error_se2[0, 2] ** 2))
-            err_d_tmp.append(abs(np.arctan2(error_se2[0, 1], error_se2[0, 0])))
-        if len(err_tr_tmp) < 1:
+            trans_error_per_segment.append(np.sqrt(error_se2[0, 1] ** 2 + error_se2[0, 2] ** 2))
+            yaw_error_per_segment.append(abs(np.arctan2(error_se2[0, 1], error_se2[0, 0])))
+        if len(trans_error_per_segment) < 1:
             print("No segments of length:", length)
-            return None, None  # this is not a graceful way of handling longer segments, fix this
-        print("err_tr_tmp:", err_tr_tmp)
-        print("err_d_tmp:", err_d_tmp)
-        error_tr.append(np.mean(err_tr_tmp) / length)
-        error_d.append(np.mean(err_d_tmp) / length)
-    return error_tr, error_d
+            return None, None
+        print("trans_error_per_segment:", np.array(trans_error_per_segment))
+        print("yaw_error_per_segment:", np.array(yaw_error_per_segment))
+
+        translational_error.append(np.mean(trans_error_per_segment) / length)
+        yaw_error.append(np.mean(yaw_error_per_segment) / length)
+    return translational_error, yaw_error
 
 
 def main():
-    errors_t = []
-    errors_d = []
+    segment_lengths = [1, 2, 3]
+    decimal_precision = 3
+    np.set_printoptions(precision=decimal_precision)
 
-    # data_folder = "/workspace/Desktop/"
-    # ground_truth_data = np.genfromtxt(data_folder + "speed_labels_training_0.csv", delimiter=",")
-    # estimated_data = np.genfromtxt(data_folder + "speed_labels_training_1.csv", delimiter=",")
+    # translational_errors = []
+    # yaw_errors = []
 
-    x_vals = np.repeat(1, 5)
-    y_vals = np.repeat(0.1, 5)
-    th_vals = np.repeat(0.01, 5)
-    ground_truth_data = np.array([x_vals, y_vals, th_vals])
-    print(ground_truth_data)
-    estimated_data = np.array(ground_truth_data)
-    estimated_data[0, :] += 0.1
-    estimated_data[1, :] += 0.05
-    estimated_data[2, :] += 0.01
-    print(estimated_data)
+    data_folder = "/workspace/Desktop/"
+    ground_truth_poses = np.genfromtxt(data_folder + "speed_labels_training_0.csv", delimiter=",")
+    estimated_poses = np.genfromtxt(data_folder + "speed_labels_training_1.csv", delimiter=",")
 
-    err_t, err_d = get_errors(ground_truth_data, estimated_data)
-    print(err_t)
-    errors_t.append(err_t)
-    errors_d.append(err_d)
+    # Debugging with toy data
+    use_toy_data = False
+    if use_toy_data:
+        x_vals = np.repeat(1, 5)
+        y_vals = np.repeat(0.1, 5)
+        th_vals = np.repeat(0.01, 5)
+        ground_truth_poses = np.array([x_vals, y_vals, th_vals])
+        print(ground_truth_poses)
+        estimated_poses = np.array(ground_truth_poses)
+        estimated_poses[0, :] += 0.1
+        estimated_poses[1, :] += 0.05
+        estimated_poses[2, :] += 0.01
+        print(estimated_poses)
 
-    # err_t_avg = np.array(err_t).mean()
-    # err_d_avg = np.array(err_d).mean()
-    # print("err_t_avg:", err_t_avg)
-    # print("err_d_avg:", err_d_avg)
+    trans_error_per_length, yaw_error_per_length = get_errors(ground_truth_poses, estimated_poses, segment_lengths)
+    print("----------------------------------------------------------------------------------------------------")
+    print("Translation lengths:", segment_lengths)
+
+    print("trans_error_per_length:", np.array(trans_error_per_length))
+    print("yaw_error_per_length:", np.array(yaw_error_per_length))
+
+    if (trans_error_per_length or yaw_error_per_length) is None:
+        print("One of the length segments requested is too long.")
+        return
+
+    # This will make more sense if we are looping over a few trajectories
+    # translational_errors.append(translational_error)
+    # yaw_errors.append(yaw_error)
+
+    average_translational_error = np.array(trans_error_per_length).mean()
+    average_yaw_error = np.array(yaw_error_per_length).mean()
+    print("average_translational_error:", np.round(average_translational_error, decimal_precision))
+    print("average_yaw_error:", np.round(average_yaw_error, decimal_precision))
 
 
 if __name__ == '__main__':
