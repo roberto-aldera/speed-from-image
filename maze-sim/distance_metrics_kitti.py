@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from argparse import ArgumentParser
 from pathlib import Path
+import matplotlib.pyplot as plt
 import settings
 
 
@@ -124,25 +125,54 @@ def calculate_error_metrics(ground_truth_poses, estimated_poses, segment_lengths
     return trans_error_per_length, yaw_error_per_length
 
 
+def generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors):
+    plt.figure(figsize=(15, 5))
+    for i in range(params.num_samples):
+        plt.plot(segment_lengths, translational_errors[i], 'o-')
+    # plt.ylim(0, 0.2)
+    plt.xlabel("Segment Length (units)")
+    plt.ylabel("Translational error (%)")
+    plt.title("%s%s%s" % ("Translational error on ", data_subset_type, " set examples"))
+    plt.grid()
+    plt.savefig(params.validation_path + data_subset_type + "/" + data_subset_type + "_trans_errors.png")
+    plt.close()
+
+    plt.figure(figsize=(15, 5))
+    bar_width = 0.25
+    plt.bar(np.array(segment_lengths) - bar_width / 2, np.mean(translational_errors, axis=0), width=bar_width,
+            label="Translation")
+    plt.bar(np.array(segment_lengths) + bar_width / 2, np.mean(yaw_errors, axis=0), width=bar_width, label="Yaw")
+    # plt.ylim(0, 0.2)
+    plt.xlabel("Segment Length (units)")
+    plt.ylabel("Mean error (%, rad/length unit)")
+    plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set examples"))
+    plt.grid()
+    plt.legend()
+    plt.savefig(params.validation_path + data_subset_type + "/" + data_subset_type + "_mean_errors.png")
+    plt.close()
+
+
 def main():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--validation_path', type=str, default="", help='path to validation folder')
-    # parser.add_argument('--output_path', type=str, default="maze_outputs/", help='path to output file')
-    parser.add_argument('--num_samples', type=int, default=5, help='Number of scenarios on which to run metrics')
+    parser.add_argument('--num_samples', type=int, default=10, help='Number of scenarios on which to run metrics')
 
     params = parser.parse_args()
-    # out_path = params.output_path
-    # Path(out_path).mkdir(parents=True, exist_ok=True)
-    # print("Saving pose trajectories metrics to:", out_path)
+    print("Saving pose trajectories metrics to:", params.validation_path)
 
-    segment_lengths = [3, 6]
+    segment_lengths = [1, 2, 3, 4, 5, 6, 7]
     decimal_precision = 3
     np.set_printoptions(precision=decimal_precision)
 
+    calculate_and_export_distance_metrics(params, settings.TRAIN_SUBSET, segment_lengths, decimal_precision)
+    calculate_and_export_distance_metrics(params, settings.VAL_SUBSET, segment_lengths, decimal_precision)
+    calculate_and_export_distance_metrics(params, settings.TEST_SUBSET, segment_lengths, decimal_precision)
+
+
+def calculate_and_export_distance_metrics(params, data_subset_type, segment_lengths, decimal_precision):
     translational_errors = []
     yaw_errors = []
 
-    data_subset_type = settings.TRAIN_SUBSET
     for idx in range(params.num_samples):
         ground_truth_poses, estimated_poses = get_poses(params.validation_path, data_subset_type, idx)
         translational_error, yaw_error = calculate_error_metrics(ground_truth_poses, estimated_poses,
@@ -155,10 +185,12 @@ def main():
     yaw_errors_df = pd.DataFrame(np.array(yaw_errors) * 180 / np.pi, columns=segment_lengths)
     print("Translational errors for all samples in this set:\n", trans_errors_df)
     print("Yaw errors (deg) for all samples in this set:\n", yaw_errors_df)
-    trans_errors_df.to_csv(params.validation_path + "/" + data_subset_type + "_translational_errors.csv")
-    yaw_errors_df.to_csv(params.validation_path + "/" + data_subset_type + "_yaw_errors.csv")
+    trans_errors_df.to_csv(
+        params.validation_path + data_subset_type + "/" + data_subset_type + "_translational_errors.csv")
+    yaw_errors_df.to_csv(params.validation_path + data_subset_type + "/" + data_subset_type + "_yaw_errors.csv")
 
-    # Makin' plots
+    generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors)
+
 
 if __name__ == '__main__':
     main()

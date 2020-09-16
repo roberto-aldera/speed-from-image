@@ -84,7 +84,7 @@ def calculate_rmse(data_subset_type, model, logger):
     logger.info(cumulative_rmse / len(data_loader))
 
 
-def get_ground_truth_and_estimated_poses(results_path, data_subset_type, model, num_trajectories_to_export):
+def export_ground_truth_and_estimated_poses(results_path, data_subset_type, model, num_trajectories_to_export):
     dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                           data_subset_type=data_subset_type,
                           transform=data_transform_for_evaluation)
@@ -202,26 +202,28 @@ def do_quick_evaluation(hparams, model, model_path):
     model = model.load_from_checkpoint(model_path)
     model.eval()
     logger = logging.getLogger(__name__)
-    logging.basicConfig(format='%(message)s', filename=(results_path + "rmse_results.txt"), level=logging.INFO)
+    logging.basicConfig(format='%(message)s', filename=(results_path + "evaluation_output.txt"), level=logging.INFO)
     logger.addHandler(logging.StreamHandler())
     logger.info("Loaded model from " + model_path + " -> ready to evaluate.")
 
-    print("Exporting trajectories...")
+    print("Exporting trajectories as csv data...")
     num_trajectories_to_export = 10
-    get_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
 
-    # print("Generating evaluation plots...")
-    # num_samples = 10
-    # export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
-    # export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
-    # export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
-    #
-    # generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+    print("Generating evaluation plots...")
+    num_samples = 10
+    export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
 
+    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+
+    # This can take a long time, and is not really as useful as the distance-based metrics
     # print("Calculating average RMSE (over entire subset)")
-    #
     # calculate_rmse(settings.TRAIN_SUBSET, model, logger)
     # calculate_rmse(settings.VAL_SUBSET, model, logger)
     # calculate_rmse(settings.TEST_SUBSET, model, logger)
