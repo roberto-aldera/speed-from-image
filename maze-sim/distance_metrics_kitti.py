@@ -1,4 +1,8 @@
 import numpy as np
+import pandas as pd
+from argparse import ArgumentParser
+from pathlib import Path
+import settings
 
 
 def compose_se2(x, y, angle):
@@ -21,7 +25,7 @@ def trajectory_distances(poses):
         dy = p[1]
 
         dist.append(dist[-1] + np.sqrt(dx * dx + dy * dy))
-    print("dist:", dist)
+    print("dist:", np.array(dist))
     return dist
 
 
@@ -75,21 +79,18 @@ def get_errors(ground_truth_poses, estimated_poses, segment_lengths):
     return translational_error, yaw_error
 
 
-def main():
-    segment_lengths = [1, 2, 3]
-    decimal_precision = 3
-    np.set_printoptions(precision=decimal_precision)
-
-    # translational_errors = []
-    # yaw_errors = []
-
-    data_folder = "/workspace/Desktop/"
-    ground_truth_poses = np.genfromtxt(data_folder + "speed_labels_training_0.csv", delimiter=",")
-    estimated_poses = np.genfromtxt(data_folder + "speed_labels_training_1.csv", delimiter=",")
+def get_poses(folder_path, data_subset_type, idx):
+    ground_truth_poses = np.genfromtxt(
+        folder_path + data_subset_type + "/ground_truth_" + data_subset_type + "_" + str(idx) + ".csv",
+        delimiter=",")
+    estimated_poses = np.genfromtxt(
+        folder_path + data_subset_type + "/prediction_" + data_subset_type + "_" + str(idx) + ".csv",
+        delimiter=",")
 
     # Debugging with toy data
     use_toy_data = False
     if use_toy_data:
+        print("Using toy data for debugging purposes...")
         x_vals = np.repeat(1, 5)
         y_vals = np.repeat(0.1, 5)
         th_vals = np.repeat(0.01, 5)
@@ -101,6 +102,10 @@ def main():
         estimated_poses[2, :] += 0.01
         print(estimated_poses)
 
+    return ground_truth_poses, estimated_poses
+
+
+def calculate_error_metrics(ground_truth_poses, estimated_poses, segment_lengths, decimal_precision):
     trans_error_per_length, yaw_error_per_length = get_errors(ground_truth_poses, estimated_poses, segment_lengths)
     print("----------------------------------------------------------------------------------------------------")
     print("Translation lengths:", segment_lengths)
@@ -112,15 +117,48 @@ def main():
         print("One of the length segments requested is too long.")
         return
 
-    # This will make more sense if we are looping over a few trajectories
-    # translational_errors.append(translational_error)
-    # yaw_errors.append(yaw_error)
-
     average_translational_error = np.array(trans_error_per_length).mean()
     average_yaw_error = np.array(yaw_error_per_length).mean()
     print("average_translational_error:", np.round(average_translational_error, decimal_precision))
     print("average_yaw_error:", np.round(average_yaw_error, decimal_precision))
+    return trans_error_per_length, yaw_error_per_length
 
+
+def main():
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument('--validation_path', type=str, default="", help='path to validation folder')
+    # parser.add_argument('--output_path', type=str, default="maze_outputs/", help='path to output file')
+    parser.add_argument('--num_samples', type=int, default=5, help='Number of scenarios on which to run metrics')
+
+    params = parser.parse_args()
+    # out_path = params.output_path
+    # Path(out_path).mkdir(parents=True, exist_ok=True)
+    # print("Saving pose trajectories metrics to:", out_path)
+
+    segment_lengths = [3, 6]
+    decimal_precision = 3
+    np.set_printoptions(precision=decimal_precision)
+
+    translational_errors = []
+    yaw_errors = []
+
+    data_subset_type = settings.TRAIN_SUBSET
+    for idx in range(params.num_samples):
+        ground_truth_poses, estimated_poses = get_poses(params.validation_path, data_subset_type, idx)
+        translational_error, yaw_error = calculate_error_metrics(ground_truth_poses, estimated_poses,
+                                                                 segment_lengths, decimal_precision)
+
+        translational_errors.append(translational_error)
+        yaw_errors.append(yaw_error)
+    print("----------------------------------------------------------------------------------------------------")
+    trans_errors_df = pd.DataFrame(translational_errors, columns=segment_lengths)
+    yaw_errors_df = pd.DataFrame(np.array(yaw_errors) * 180 / np.pi, columns=segment_lengths)
+    print("Translational errors for all samples in this set:\n", trans_errors_df)
+    print("Yaw errors (deg) for all samples in this set:\n", yaw_errors_df)
+    trans_errors_df.to_csv(params.validation_path + "/" + data_subset_type + "_translational_errors.csv")
+    yaw_errors_df.to_csv(params.validation_path + "/" + data_subset_type + "_yaw_errors.csv")
+
+    # Makin' plots
 
 if __name__ == '__main__':
     main()

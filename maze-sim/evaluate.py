@@ -84,6 +84,33 @@ def calculate_rmse(data_subset_type, model, logger):
     logger.info(cumulative_rmse / len(data_loader))
 
 
+def get_ground_truth_and_estimated_poses(results_path, data_subset_type, model, num_trajectories_to_export):
+    dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
+                          data_subset_type=data_subset_type,
+                          transform=data_transform_for_evaluation)
+    data_loader = DataLoader(dataset, batch_size=1,  # not sure if batch size here needs to be only 1
+                             shuffle=False, num_workers=settings.NUM_CPUS)
+
+    subset_fig_path = results_path + data_subset_type + "/"
+    Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
+    print("Saving pose trajectories to:", subset_fig_path)
+
+    for idx in range(num_trajectories_to_export):
+        data_at_idx = data_loader.dataset[idx]
+        img = data_at_idx['image'].unsqueeze_(0)
+        pose_labels = data_at_idx['pose_data'].numpy()
+        pose_from_model = model(img).detach().numpy()
+        pose_estimate = np.transpose(
+            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
+
+        np.savetxt(("%s%s%s%s%s%s" % (subset_fig_path, "/ground_truth_", data_subset_type, "_", idx, ".csv")),
+                   pose_labels, delimiter=",",
+                   fmt="%10.5f")
+        np.savetxt(("%s%s%s%s%s%s" % (subset_fig_path, "/prediction_", data_subset_type, "_", idx, ".csv")),
+                   pose_estimate, delimiter=",",
+                   fmt="%10.5f")
+
+
 def export_figures_for_poses(results_path, data_subset_type, model, num_samples):
     dataset = MazeDataset(root_dir=settings.MAZE_IMAGE_DIR,
                           data_subset_type=data_subset_type,
@@ -179,21 +206,25 @@ def do_quick_evaluation(hparams, model, model_path):
     logger.addHandler(logging.StreamHandler())
     logger.info("Loaded model from " + model_path + " -> ready to evaluate.")
 
-    print("Generating evaluation plots...")
-    num_samples = 10
-    export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
+    print("Exporting trajectories...")
+    num_trajectories_to_export = 10
+    get_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
 
-    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+    # print("Generating evaluation plots...")
+    # num_samples = 10
+    # export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
+    # export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
+    # export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
+    #
+    # generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
+    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
 
-    print("Calculating average RMSE (over entire subset)")
-
-    calculate_rmse(settings.TRAIN_SUBSET, model, logger)
-    calculate_rmse(settings.VAL_SUBSET, model, logger)
-    calculate_rmse(settings.TEST_SUBSET, model, logger)
+    # print("Calculating average RMSE (over entire subset)")
+    #
+    # calculate_rmse(settings.TRAIN_SUBSET, model, logger)
+    # calculate_rmse(settings.VAL_SUBSET, model, logger)
+    # calculate_rmse(settings.TEST_SUBSET, model, logger)
 
     print("--- Evaluation execution time: %s seconds ---" % (time.time() - start_time))
 
