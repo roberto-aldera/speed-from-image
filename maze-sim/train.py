@@ -3,7 +3,7 @@ from pathlib import Path
 import time
 import settings
 from argparse import ArgumentParser
-from evaluate import do_quick_evaluation
+from export_results import do_quick_export
 from lenet import LeNet
 from resnet import ResNet
 
@@ -52,5 +52,5 @@ if __name__ == '__main__':
     print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
     if hparams.do_evaluation:
-        do_quick_evaluation(hparams, model, path_to_model)
+        do_quick_export(hparams, model, path_to_model)
     # trainer.test()

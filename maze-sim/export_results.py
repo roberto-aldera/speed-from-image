@@ -194,7 +194,7 @@ def get_global_poses(x_start, relative_poses_list):
     return x_robot, y_robot, th_robot
 
 
-def do_quick_evaluation(hparams, model, model_path):
+def do_quick_export(hparams, model, model_path):
     start_time = time.time()
     current_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
     results_path = settings.MAZE_RESULTS_DIR + hparams.model_name + "/" + current_time + "/"
@@ -254,7 +254,7 @@ def main():
     elif hparams.model_name == 'resnet':
         model = ResNet(hparams)
 
-    do_quick_evaluation(hparams, model, path_to_model)
+    do_quick_export(hparams, model, path_to_model)
 
 
 if __name__ == "__main__":
