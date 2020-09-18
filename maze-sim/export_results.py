@@ -170,8 +170,11 @@ def get_global_poses(x_start, relative_poses_list):
     T_robot_start[1, 2] = x_start[1]
     robot_global_poses = [T_robot_start]
     relative_poses = []
+    x_robot = []
+    y_robot = []
+    th_robot = []
 
-    for i in range(1, relative_poses_list.shape[1]):
+    for i in range(0, relative_poses_list.shape[1]):
         T_i = np.identity(3)
         th = relative_poses_list[2, i]
         T_i[0, 0] = np.cos(th)
@@ -182,11 +185,8 @@ def get_global_poses(x_start, relative_poses_list):
         T_i[1, 2] = relative_poses_list[1, i]
         relative_poses.append(T_i)
 
-    x_robot = []
-    y_robot = []
-    th_robot = []
-    for i in range(1, len(relative_poses)):
-        T_global_pose = np.matmul((robot_global_poses[i - 1]), relative_poses[i])
+    for i in range(0, len(relative_poses)):
+        T_global_pose = np.matmul((robot_global_poses[i]), relative_poses[i])
         robot_global_poses.append(T_global_pose)
         x_robot.append(T_global_pose[0, 2])
         y_robot.append(T_global_pose[1, 2])
