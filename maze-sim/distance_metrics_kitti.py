@@ -91,16 +91,33 @@ def get_poses(folder_path, data_subset_type, idx):
     use_toy_data = False
     if use_toy_data:
         print("Using toy data for debugging purposes...")
-        x_vals = np.repeat(1, 5)
-        y_vals = np.repeat(0.1, 5)
-        th_vals = np.repeat(0.01, 5)
+        trajectory_length = 10
+        x_vals = np.repeat(1, trajectory_length)
+        y_vals = np.repeat(0.1, trajectory_length)
+        th_vals = np.repeat(0.01, trajectory_length)
         ground_truth_poses = np.array([x_vals, y_vals, th_vals])
         print(ground_truth_poses)
         estimated_poses = np.array(ground_truth_poses)
-        estimated_poses[0, :] += 0.1
-        estimated_poses[1, :] += 0.05
-        estimated_poses[2, :] += 0.01
+        estimated_poses[0, :] += 0.01  # np.random.uniform(-0.1, 0.1, trajectory_length)  # 0.05
+        estimated_poses[2, 0] += 1.5
+        estimated_poses[1, :] += 0.01
+        estimated_poses[2, :] += 0.01  # np.random.uniform(-0.2, 0.2, trajectory_length)
         print(estimated_poses)
+
+        from export_results import get_global_poses
+        from maze_image_maker import draw_robot_poses
+        x_robot, y_robot, th_robot = get_global_poses([0, 0], ground_truth_poses)
+        predicted_x_robot, predicted_y_robot, predicted_th_robot = get_global_poses([0, 0], estimated_poses)
+        plt.figure(figsize=(10, 10))
+        draw_robot_poses(x_robot, y_robot, th_robot, "blue")
+        draw_robot_poses(predicted_x_robot, predicted_y_robot, predicted_th_robot, "red")
+        plt.grid()
+        limit = 10 + 5
+        plt.xlim(-limit, limit)
+        plt.ylim(-limit, limit)
+        plt.title("Toy example")
+        plt.savefig("/workspace/Desktop/toy_example.png")
+        plt.close()
 
     return ground_truth_poses, estimated_poses
 
