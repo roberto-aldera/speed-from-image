@@ -66,8 +66,7 @@ def get_errors(ground_truth_poses, estimated_poses, segment_lengths):
             se2_gt = np.linalg.inv(gt_poses[start_idx]) @ gt_poses[end_idx]
             se2_est = np.linalg.inv(est_poses[start_idx]) @ est_poses[end_idx]
             error_se2 = np.linalg.inv(se2_est) @ se2_gt
-
-            trans_error_per_segment.append(np.sqrt(error_se2[0, 1] ** 2 + error_se2[0, 2] ** 2))
+            trans_error_per_segment.append(np.sqrt(error_se2[0, 2] ** 2 + error_se2[1, 2] ** 2))
             yaw_error_per_segment.append(abs(np.arctan2(error_se2[0, 1], error_se2[0, 0])))
         if len(trans_error_per_segment) < 1:
             print("No segments of length:", length)
