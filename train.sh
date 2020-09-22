@@ -1,0 +1,1 @@
+python maze-sim/train.py --model_name="resnet" --max_num_epochs 50 --batch_size 128 --dropout 0.5 --do_quick_export=True --gpus 1

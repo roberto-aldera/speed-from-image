@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser = pl.Trainer.add_argparse_args(parser)
 
     parser.add_argument("--model_name", type=str, default="lenet", help="lenet or resnet")
-    parser.add_argument("--do_evaluation", type=str, default=False, help="Run evaluation script after training")
+    parser.add_argument("--do_quick_export", type=str, default=False, help="Run export/evaluation script after training")
 
     temp_args, _ = parser.parse_known_args()
     # let the model add what it wants
@@ -51,6 +51,6 @@ if __name__ == '__main__':
     print("Finished Training")
     print("--- Training execution time: %s seconds ---" % (time.time() - start_time))
 
-    if hparams.do_evaluation:
+    if hparams.do_quick_export:
         do_quick_export(hparams, model, path_to_model)
     # trainer.test()

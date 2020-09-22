@@ -103,7 +103,8 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
         plt.ylim(0, settings.MAP_SIZE)
         plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_maze_", idx, ".pdf"))
         plt.close()
-    print("Maze sim complete for", data_subset_type, "index:", idx)
+    if idx % 100 == 0:
+        print("Maze sim complete for", data_subset_type, "index:", idx)
 
     data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
     radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT

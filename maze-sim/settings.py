@@ -11,9 +11,12 @@ VAL_SUBSET = "validation"
 TEST_SUBSET = "test"
 
 # General dataset parameters
-TOTAL_SAMPLES = 10000
-TRAIN_RATIO = 0.8
-VAL_RATIO = 0.1
+# TOTAL_SAMPLES = 10000
+# TRAIN_RATIO = 0.8
+# VAL_RATIO = 0.1
+TOTAL_SAMPLES = 20000
+TRAIN_RATIO = 0.9
+VAL_RATIO = 0.05
 TRAIN_SET_SIZE = int(TOTAL_SAMPLES * TRAIN_RATIO)
 VAL_SET_SIZE = int(TOTAL_SAMPLES * VAL_RATIO)
 TEST_SET_SIZE = TOTAL_SAMPLES - (TRAIN_SET_SIZE + VAL_SET_SIZE)
@@ -40,8 +43,11 @@ ADDITIONAL_ROBOT_VISUAL_WEIGHT = 1
 # MAZE_SPEED_STD_DEV = np.array([0.07888052, 0.04509365, 0.16137534])
 # MAZE_SPEED_MEAN = np.array([0, 0, 0])
 # MAZE_SPEED_STD_DEV = np.array([1, 1, 1])
-MAZE_SPEED_MEAN = np.array([5.13417215e-01, 4.28445625e-05, 1.45100250e-04])
-MAZE_SPEED_STD_DEV = np.array([0.16595751, 0.0202896, 0.06574377])
+# MAZE_SPEED_MEAN = np.array([5.13417215e-01, 4.28445625e-05, 1.45100250e-04])
+# MAZE_SPEED_STD_DEV = np.array([0.16595751, 0.0202896, 0.06574377])
+MAZE_SPEED_MEAN = np.array([5.12978690e-01, 3.22280556e-06, 3.32384722e-05])
+MAZE_SPEED_STD_DEV = np.array([0.16593968, 0.02033633, 0.06580356])
+
 
 # Models
 # ARCHITECTURE_TYPE = "lenet"
@@ -54,7 +60,15 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 64
 
 # Paths
-ROOT_DIR = "/workspace/data/speed-from-image/"
-MAZE_IMAGE_DIR = ROOT_DIR + "maze-images/"
-MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
-MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/"
+IS_RUNNING_ON_SERVER = True
+
+if IS_RUNNING_ON_SERVER is True:
+    ROOT_DIR = "/Volumes/scratchdata/roberto/maze/"
+    MAZE_IMAGE_DIR = "/workspace/maze-images/"
+    MAZE_MODEL_DIR = ROOT_DIR + "models/"
+    MAZE_RESULTS_DIR = ROOT_DIR + "evaluation/"
+else:
+    ROOT_DIR = "/workspace/data/speed-from-image/"
+    MAZE_IMAGE_DIR = ROOT_DIR + "maze-images/"
+    MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
+    MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/"

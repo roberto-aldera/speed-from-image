@@ -26,7 +26,7 @@ def main():
         plt.axis("off")
         plt.imshow(np.asarray(img[0]))
     plt.subplots_adjust(wspace=0, hspace=0)
-    plt.savefig("%s%s%s%s" % (out_path, "/", "validation_mazes", ".png"), bbox_inches="tight", pad_inches=0)
+    plt.savefig("%s%s%s" % (in_path, "validation_mazes", ".png"), bbox_inches="tight", pad_inches=0)
     plt.close()
 
 

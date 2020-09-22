@@ -142,6 +142,13 @@ def calculate_error_metrics(ground_truth_poses, estimated_poses, segment_lengths
 
 
 def generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors):
+    yaw_errors = np.array(yaw_errors) * 180 / np.pi
+    mean_translational_error = np.mean(translational_errors)
+    mean_yaw_error = np.mean(yaw_errors)
+    print("Errors for", data_subset_type, "subset:")
+    print("Mean translational error (%) = ", mean_translational_error)
+    print("Mean yaw error (deg/length unit) = ", mean_yaw_error)
+
     plt.figure(figsize=(15, 5))
     for i in range(params.num_samples):
         plt.plot(segment_lengths, translational_errors[i], 'o-')
@@ -153,17 +160,35 @@ def generate_error_metrics_plots(params, segment_lengths, data_subset_type, tran
     plt.savefig(params.validation_path + data_subset_type + "/" + data_subset_type + "_trans_errors.png")
     plt.close()
 
-    plt.figure(figsize=(15, 5))
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
     bar_width = 0.25
-    plt.bar(np.array(segment_lengths) - bar_width / 2, np.mean(translational_errors, axis=0), width=bar_width,
-            label="Translation")
-    plt.bar(np.array(segment_lengths) + bar_width / 2, np.mean(yaw_errors, axis=0), width=bar_width, label="Yaw")
-    # plt.ylim(0, 0.2)
-    plt.xlabel("Segment Length (units)")
-    plt.ylabel("Mean error (%, rad/length unit)")
+    colour_translation = 'tab:red'
+    ax1.set_xlabel("Segment Length (units)")
+    ax1.set_ylabel("Mean segment translational error (%)", color=colour_translation)
+    ax1.bar(np.array(segment_lengths) - bar_width / 2, np.mean(translational_errors, axis=0), width=bar_width,
+            label="Translation", color=colour_translation, alpha=0.9, zorder=3)
+    ax1.tick_params(axis='y', labelcolor=colour_translation)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    colour_yaw = 'tab:blue'
+    ax2.set_ylabel("Mean segment yaw error (deg/length unit)", color=colour_yaw)  # we already handled the x-label with ax1
+    ax2.bar(np.array(segment_lengths) + bar_width / 2, np.mean(yaw_errors, axis=0), width=bar_width, label="Yaw",
+            color=colour_yaw, alpha=0.9, zorder=3)
+    ax2.tick_params(axis='y', labelcolor=colour_yaw)
+    ax1.grid()
+
+    ax1.axhline(y=np.mean(translational_errors), color=colour_translation, linestyle='--')
+    ax2.axhline(y=np.mean(yaw_errors), color=colour_yaw, linestyle='--')
+    ax1.text(0.5, 0.95, "mean translational error = " + str(np.round(mean_translational_error, 3)), ha='center',
+             va='center', color=colour_translation, transform=ax1.transAxes, backgroundcolor="w")
+    ax2.text(0.5, 0.9, "mean yaw error = " + str(np.round(mean_yaw_error, 3)), ha='center', va='center',
+             color=colour_yaw, transform=ax2.transAxes, backgroundcolor="w")
+
     plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set examples"))
-    plt.grid()
-    plt.legend()
+    fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)
+    fig.tight_layout()
     plt.savefig(params.validation_path + data_subset_type + "/" + data_subset_type + "_mean_errors.png")
     plt.close()
 
