@@ -143,11 +143,12 @@ def calculate_error_metrics(ground_truth_poses, estimated_poses, segment_lengths
 
 def generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors):
     yaw_errors = np.array(yaw_errors) * 180 / np.pi
+    translational_errors = np.array(translational_errors) * 100 # convert to percentage
     mean_translational_error = np.mean(translational_errors)
     mean_yaw_error = np.mean(yaw_errors)
     print("Errors for", data_subset_type, "subset:")
     print("Mean translational error (%) = ", mean_translational_error)
-    print("Mean yaw error (deg/length unit) = ", mean_yaw_error)
+    print("Mean yaw error (deg/m) = ", mean_yaw_error)
 
     plt.figure(figsize=(15, 5))
     for i in range(params.num_samples):
@@ -173,7 +174,8 @@ def generate_error_metrics_plots(params, segment_lengths, data_subset_type, tran
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     colour_yaw = 'tab:blue'
-    ax2.set_ylabel("Mean segment yaw error (deg/length unit)", color=colour_yaw)  # we already handled the x-label with ax1
+    ax2.set_ylabel("Mean segment yaw error (deg/m)",
+                   color=colour_yaw)  # we already handled the x-label with ax1
     ax2.bar(np.array(segment_lengths) + bar_width / 2, np.mean(yaw_errors, axis=0), width=bar_width, label="Yaw",
             color=colour_yaw, alpha=0.9, zorder=3)
     ax2.tick_params(axis='y', labelcolor=colour_yaw)
@@ -181,9 +183,9 @@ def generate_error_metrics_plots(params, segment_lengths, data_subset_type, tran
 
     ax1.axhline(y=np.mean(translational_errors), color=colour_translation, linestyle='--')
     ax2.axhline(y=np.mean(yaw_errors), color=colour_yaw, linestyle='--')
-    ax1.text(0.5, 0.95, "mean translational error = " + str(np.round(mean_translational_error, 3)), ha='center',
+    ax1.text(0.5, 0.95, "mean translational error (%) = " + str(np.round(mean_translational_error, 3)), ha='center',
              va='center', color=colour_translation, transform=ax1.transAxes, backgroundcolor="w")
-    ax2.text(0.5, 0.9, "mean yaw error = " + str(np.round(mean_yaw_error, 3)), ha='center', va='center',
+    ax2.text(0.5, 0.9, "mean yaw error (deg/m) = " + str(np.round(mean_yaw_error, 3)), ha='center', va='center',
              color=colour_yaw, transform=ax2.transAxes, backgroundcolor="w")
 
     plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set examples"))
