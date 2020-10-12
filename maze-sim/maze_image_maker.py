@@ -43,6 +43,8 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/obstacles_", data_subset_type, "_", idx, ".csv")),
                obstacles, delimiter=",")
 
+    # The scene context will affect robot behaviour, ranging from unimpeded driving to being at a standstill
+    scene_context_constant = np.random.uniform(0.0001, 1.0)
     while k < settings.MAX_ITERATIONS:
         relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
 
@@ -84,6 +86,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
         max_velocity = min(settings.VELOCITY_LIMIT,
                            settings.NOMINAL_VELOCITY * min(distances) / settings.PROXIMITY_TO_OBSTACLE_CAUTION_FACTOR)
         f_total = f_total / np.linalg.norm(f_total) * min(max_velocity, np.linalg.norm(f_total))
+        f_total *= scene_context_constant
 
         theta_robot = math.atan2(f_total[1], f_total[0])
         x_robot = x_robot + f_total
@@ -94,13 +97,17 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
 
     if save_plots:
         plt.figure(figsize=(10, 10))
-        plt.plot(obstacles[0, :], obstacles[1, :], 'r*')
-        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th, "blue")
-        plt.plot(x_start[0], x_start[1], 'mo')
-        plt.plot(x_goal[0], x_goal[1], 'go')
+        colours = ["red", "blue", "magenta", "green"]
+        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="obstacles")
+        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th, colours[1])
+        plt.plot(x_start[0], x_start[1], "o", color=colours[2])
+        plt.plot(x_goal[0], x_goal[1], "o", color=colours[3])
         plt.grid()
         plt.xlim(0, settings.MAP_SIZE)
         plt.ylim(0, settings.MAP_SIZE)
+        lines = [plt.Line2D([0], [0], color=c, linewidth=0, marker='.', markersize=20) for c in colours]
+        labels = ["Obstacles", "True pose", "Start", "Goal"]
+        plt.legend(lines, labels)
         plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_maze_", idx, ".pdf"))
         plt.close()
     if idx % 100 == 0:
@@ -196,7 +203,7 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = False
+    save_plots = True
 
     for idx in range(num_samples):
         xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
@@ -211,6 +218,6 @@ if __name__ == "__main__":
     start_time = time.time()
 
     generate_maze_samples(settings.TRAIN_SET_SIZE, settings.TRAIN_SUBSET)
-    generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
-    generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
+    # generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
+    # generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
     print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))

@@ -14,7 +14,7 @@ TEST_SUBSET = "test"
 # TOTAL_SAMPLES = 10000
 # TRAIN_RATIO = 0.8
 # VAL_RATIO = 0.1
-TOTAL_SAMPLES = 20000
+TOTAL_SAMPLES = 5  # 20000
 TRAIN_RATIO = 0.9
 VAL_RATIO = 0.05
 TRAIN_SET_SIZE = int(TOTAL_SAMPLES * TRAIN_RATIO)
@@ -60,7 +60,7 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 64
 
 # Paths
-IS_RUNNING_ON_SERVER = True
+IS_RUNNING_ON_SERVER = False
 
 if IS_RUNNING_ON_SERVER is True:
     ROOT_DIR = "/Volumes/scratchdata/roberto/maze/"
@@ -69,6 +69,6 @@ if IS_RUNNING_ON_SERVER is True:
     MAZE_RESULTS_DIR = ROOT_DIR + "evaluation/"
 else:
     ROOT_DIR = "/workspace/data/speed-from-image/"
-    MAZE_IMAGE_DIR = ROOT_DIR + "maze-images/"
+    MAZE_IMAGE_DIR = ROOT_DIR + "maze-images-tmp/"
     MAZE_MODEL_DIR = ROOT_DIR + "maze-models/"
     MAZE_RESULTS_DIR = ROOT_DIR + "maze-evaluation/"
