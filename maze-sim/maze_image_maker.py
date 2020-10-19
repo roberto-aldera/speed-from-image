@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import shutil
 import time
+import csv
 import settings
 
 
@@ -187,19 +188,24 @@ def generate_maze_samples(num_samples, data_subset_type):
 
 
 def save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, save_plots=False):
-    dx = []
-    dy = []
-    dth = []
-    for i in range(len(relative_poses)):
-        dx.append(relative_poses[i][0, 3])
-        dy.append(relative_poses[i][1, 3])
-        dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
-
-    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
-               (dx, dy, dth), delimiter=",",
-               fmt="%10.5f")
+    csv_file = "%s%s%s%s%s%s" % (split_data_path, "/speed_labels_", data_subset_type, "_", idx, ".csv")
+    with open(csv_file, 'w') as pose_labels_file:
+        wr = csv.writer(pose_labels_file, delimiter=",")
+        for i in range(len(relative_poses)):
+            pose_label = [relative_poses[i][0, 3], relative_poses[i][1, 3],
+                          np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1])]
+            wr.writerow(pose_label)
 
     if save_plots:
+        # Open the file we've just written to, and plot the values
+        with open(csv_file, newline='') as f:
+            reader = csv.reader(f)
+            pose_data = list(reader)
+
+        dx = [float(items[0]) for items in pose_data]
+        dy = [float(items[1]) for items in pose_data]
+        dth = [float(items[2]) for items in pose_data]
+
         plt.figure(figsize=(10, 3))
         plt.plot(dx, '.-', label="x")
         plt.plot(dy, '.-', label="y")
