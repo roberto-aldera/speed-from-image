@@ -153,48 +153,14 @@ def draw_robot_poses(x_poses, y_poses, thetas, colour):
         plt.gca().add_patch(triangle)
 
 
-def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subset_type, save_plots=False):
-    x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
-    T_translate = np.identity(4)
-    T_translate[0, 3] = x_start[0]
-    T_translate[1, 3] = x_start[1]
-
-    # Rotate about z-axis
-    T_rot_1 = np.identity(4)
-    th = np.pi / 2  # facing upwards
-    T_rot_1[0, 0] = np.cos(th)
-    T_rot_1[0, 1] = -np.sin(th)
-    T_rot_1[1, 0] = np.sin(th)
-    T_rot_1[1, 1] = np.cos(th)
-
-    # Rotate about new x-axis through 180 deg
-    T_rot_2 = np.identity(4)
-    th = np.pi
-    T_rot_2[1, 1] = np.cos(th)
-    T_rot_2[1, 2] = -np.sin(th)
-    T_rot_2[2, 1] = np.sin(th)
-    T_rot_2[2, 2] = np.cos(th)
-    print(T_rot_2)
-
-    # # Rotate about new x-axis through 180 deg
-    # T_rot_2 = np.identity(4)
-    # th = np.pi
-    # T_rot_2[0, 0] = np.cos(th)
-    # T_rot_2[0, 2] = np.sin(th)
-    # T_rot_2[2, 0] = -np.sin(th)
-    # T_rot_2[2, 2] = np.cos(th)
-    # print(T_rot_2)
-
-    T_initial_pose_world = T_translate @ T_rot_1  # @ T_rot_2
-
-    robot_global_poses = [T_initial_pose_world]
+def generate_relative_poses(robot_xy, robot_th):
+    robot_global_poses = []
     relative_poses = []
     print("Robot xy shape:", robot_xy.shape[1])
     for i in range(robot_xy.shape[1]):
         print(i)
         T_i = np.identity(4)
         th = robot_th[i]
-        # print(th)
         T_i[0, 0] = np.cos(th)
         T_i[0, 1] = -np.sin(th)
         T_i[1, 0] = np.sin(th)
@@ -205,30 +171,45 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subse
 
     # Loop runs for 1 less iteration because these are relative poses
     for i in range(1, len(robot_global_poses)):
-        # print(i)
-        # print(robot_global_poses[i - 1])
-        # T_rel_pose = np.matmul(np.linalg.inv(robot_global_poses[i - 1]), robot_global_poses[i])
         T_rel_pose = np.linalg.inv(robot_global_poses[i - 1]) @ robot_global_poses[i]
-        # T_rel_pose = robot_global_poses[i]
-        # T_rel_pose = T_rel_pose  @ np.linalg.inv(T_rot_2) @ np.linalg.inv(T_rot_1)
-        print(T_rel_pose)
-        relative_poses.append(T_rel_pose)
+        # Manually adjust transform to be in robot frame
+        T_i = np.identity(4)
+        th = -np.arctan2(T_rel_pose[1, 0], T_rel_pose[1, 1])
+        T_i[0, 0] = np.cos(th)
+        T_i[0, 1] = -np.sin(th)
+        T_i[1, 0] = np.sin(th)
+        T_i[1, 1] = np.cos(th)
+        T_i[0, 3] = T_rel_pose[0, 3]
+        T_i[1, 3] = -T_rel_pose[1, 3]
+        relative_poses.append(T_i)
 
+    return relative_poses
+
+
+def generate_maze_samples(num_samples, data_subset_type):
+    split_data_path = Path(settings.MAZE_IMAGE_DIR, data_subset_type)
+    if split_data_path.exists() and split_data_path.is_dir():
+        shutil.rmtree(split_data_path)
+    split_data_path.mkdir(parents=True)
+    save_plots = True
+
+    for idx in range(num_samples):
+        xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
+                                                                save_plots)
+        relative_poses = generate_relative_poses(xy_positions, thetas)
+        plot_obstacles_for_debugging(relative_poses, idx, split_data_path, save_obstacle_plots=True)
+    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
+          "and written to:", split_data_path)
+
+
+def save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, save_plots=False):
     dx = []
     dy = []
     dth = []
     for i in range(len(relative_poses)):
         dx.append(relative_poses[i][0, 3])
-        dy.append(-relative_poses[i][1, 3])
-        dth.append(-np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
-        import pdb
-        # pdb.set_trace()
-        # dx.append(robot_xy[0, i])
-        # dy.append(robot_xy[1, i])
-        # dth.append(np.arctan2(np.sin(robot_th[i]), np.cos(robot_th[i])))
-        # dx.append(robot_global_poses[i][0, 3])
-        # dy.append(robot_global_poses[i][1, 3])
-        # dth.append(np.arctan2(robot_global_poses[i][1, 0], robot_global_poses[i][1, 1]))
+        dy.append(relative_poses[i][1, 3])
+        dth.append(np.arctan2(relative_poses[i][1, 0], relative_poses[i][1, 1]))
 
     np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/speed_labels_", data_subset_type, "_", idx, ".csv")),
                (dx, dy, dth), delimiter=",",
@@ -244,77 +225,72 @@ def generate_relative_poses(idx, robot_xy, robot_th, split_data_path, data_subse
         plt.savefig("%s%s%i%s" % (split_data_path, "/dx_dy_dth_", idx, ".png"))
         plt.close()
 
-    return relative_poses
 
-
-def generate_maze_samples(num_samples, data_subset_type):
-    split_data_path = Path(settings.MAZE_IMAGE_DIR, data_subset_type)
-    if split_data_path.exists() and split_data_path.is_dir():
-        shutil.rmtree(split_data_path)
-    split_data_path.mkdir(parents=True)
-    save_plots = True
-
-    for idx in range(num_samples):
-        xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
-                                                                save_plots)
-        relative_poses = generate_relative_poses(idx, xy_positions, thetas, split_data_path, data_subset_type,
-                                                 save_plots)
-        # plot_obstacles_for_debugging(relative_poses, idx, split_data_path)
-    print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
-          "and written to:", split_data_path)
-
-
-def plot_obstacles_for_debugging(relative_poses, idx, split_data_path, data_subset_type=settings.TRAIN_SUBSET):
-    # Obstacle tweaking here.
-    T_origin = np.identity(3)
-    th_origin = -np.pi / 2
+def plot_obstacles_for_debugging(relative_poses, idx, split_data_path, data_subset_type=settings.TRAIN_SUBSET,
+                                 save_obstacle_plots=False):
+    T_origin = np.identity(4)
+    th_origin = 0
     T_origin[0, 0] = np.cos(th_origin)
     T_origin[0, 1] = -np.sin(th_origin)
     T_origin[1, 0] = np.sin(th_origin)
     T_origin[1, 1] = np.cos(th_origin)
-    T_origin[0, 2] = settings.MAP_SIZE / 2
-    T_origin[1, 2] = settings.MAP_SIZE / 2
+    T_origin[0, 3] = settings.MAP_SIZE / 2
+    T_origin[1, 3] = settings.MAP_SIZE / 2
 
-    T_i = np.identity(3)
-    th = np.pi / 32
+    # # Manual transform for debugging...
+    # T_i = np.identity(4)
+    # th = -np.pi/32
+    # x = 0
+    # y = 0
+    # T_i[0, 0] = np.cos(th)
+    # T_i[0, 1] = -np.sin(th)
+    # T_i[1, 0] = np.sin(th)
+    # T_i[1, 1] = np.cos(th)
+    # T_i[0, 3] = -y
+    # T_i[1, 3] = -x
+
+    # Manually adjust transform to be in global frame for moving obstacles (checked with debugging matrix above)
+    T_i = np.identity(4)
+    th = np.arctan2(relative_poses[0][1, 0], relative_poses[0][1, 1])
+    x = relative_poses[0][0, 3]
+    y = relative_poses[0][1, 3]
     T_i[0, 0] = np.cos(th)
     T_i[0, 1] = -np.sin(th)
     T_i[1, 0] = np.sin(th)
     T_i[1, 1] = np.cos(th)
-    T_i[0, 2] = 0  # robot_xy[:, 1][0] - robot_xy[:, 0][0]
-    T_i[1, 2] = 0  # robot_xy[:, 1][1] - robot_xy[:, 0][1]
-    first_relative_pose = relative_poses[0]
-    # first_relative_pose = np.array(T_i)
+    T_i[0, 3] = -y
+    T_i[1, 3] = -x
+
+    first_relative_pose = T_i
     obstacles = np.genfromtxt(
         settings.MAZE_IMAGE_DIR + data_subset_type + "/obstacles_" + data_subset_type + "_" + str(idx) + ".csv",
         delimiter=",")
     obs_arr = np.array(obstacles)
-    obs_arr = np.r_[obs_arr, np.ones([1, obs_arr.shape[1]])]
-    tmp_obstacles = []
+    obs_arr = np.r_[obs_arr, np.zeros([1, obs_arr.shape[1]]), np.ones([1, obs_arr.shape[1]])]
+    tm1_obstacles = []
     for i in range(obstacles.shape[1]):
-        new_obstacle_position = T_origin @ first_relative_pose @ np.linalg.inv(T_origin) @ obs_arr[:, i]
-        tmp_obstacles.append(new_obstacle_position)
-    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/tmp_obstacles_", data_subset_type, "_", idx, ".csv")),
-               tmp_obstacles, delimiter=",")
+        new_obstacle_position = T_origin @ np.linalg.inv(first_relative_pose) @ np.linalg.inv(T_origin) @ obs_arr[:, i]
+        tm1_obstacles.append(new_obstacle_position)
+    # Bump off 1 relative pose that was used to generate the previous motion so that the labels only carry future poses
+    # and not the previous one(s)
+    relative_poses = relative_poses[1:]
+    save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, True)
 
-    moved_obstacles = np.genfromtxt(
-        settings.MAZE_IMAGE_DIR + data_subset_type + "/tmp_obstacles_" + data_subset_type + "_" + str(idx) + ".csv",
-        delimiter=",")
+    if save_obstacle_plots:
+        tm1_obstacles = np.array(tm1_obstacles)[:, 0:2]
 
-    plt.figure(figsize=(10, 10))
-    colours = ["red", "blue"]
-    plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="obstacles")
-    import pdb
-    # pdb.set_trace()
-    plt.plot(moved_obstacles[:, 0], moved_obstacles[:, 1], ".", color=colours[1], label="moved obstacles")
-    plt.grid()
-    plt.xlim(0, settings.MAP_SIZE)
-    plt.ylim(0, settings.MAP_SIZE)
-    lines = [plt.Line2D([0], [0], color=c, linewidth=0, marker='.', markersize=20) for c in colours]
-    labels = ["Obstacles", "Moved obstacles"]
-    plt.legend(lines, labels)
-    plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_obstacles_", idx, ".pdf"))
-    plt.close()
+        plt.figure(figsize=(10, 10))
+        colours = ["red", "blue"]
+        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="t0 obstacles")
+        plt.plot(tm1_obstacles[:, 0], tm1_obstacles[:, 1], ".", color=colours[1], label="tm1 obstacles")
+        plt.grid()
+        plt.xlim(0, settings.MAP_SIZE)
+        plt.ylim(0, settings.MAP_SIZE)
+        lines = [plt.Line2D([0], [0], color=c, linewidth=0, marker='.', markersize=20) for c in colours]
+        labels = ["t0 obstacles", "tm1 obstacles"]
+        plt.legend(lines, labels)
+        plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_obstacles_", idx, ".pdf"))
+        plt.close()
 
 
 if __name__ == "__main__":
