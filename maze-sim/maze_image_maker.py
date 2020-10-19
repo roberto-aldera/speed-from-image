@@ -11,11 +11,11 @@ import settings
 
 def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, save_plots=False):
     k = 0
-    x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
-    x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE]).reshape(2, -1)
+    x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2])
+    x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE])
     x_robot = x_start
     goal_error = x_goal - x_robot
-    robot_xy = np.array(x_robot)
+    robot_xy = np.array(x_robot).reshape(1, -1)
     robot_th = np.array([np.pi / 2])  # robot is facing 'upwards' when moving forwards (+theta is ccw in global ref)
     # Generate obstacles in random positions across the map
     obstacles_x = [random.randrange(settings.MAX_OBSTACLE_X_POSITION_FROM_CENTRE,
@@ -24,23 +24,20 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     obstacles_y = [random.randrange(settings.MIN_OBSTACLE_Y_POSITION,
                                     (settings.MAP_SIZE - 1) - 5,
                                     settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for x in range(settings.MAX_NUM_OBSTACLES)]
-    obstacles = [obstacles_x, obstacles_y]
+
+    obstacles = list(zip(obstacles_x, obstacles_y))
+
     # Remove any obstacles that are too close to the robot's starting position
-    relative_positions = obstacles - np.tile(x_start, (1, settings.MAX_NUM_OBSTACLES))
-    distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
+    relative_positions = obstacles - np.tile(x_start, (settings.MAX_NUM_OBSTACLES, 1))
+    distances = np.sqrt(np.sum(np.square(relative_positions), axis=1))
     obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=1)
     # Remove obstacles directly ahead of starting position
-    obstacles = np.delete(obstacles, np.argwhere(obstacles[0, :] == x_start[0]), axis=1)
-    obstacles = np.append(obstacles, np.array([[17, 18, 19, 20], [17, 17, 17, 17]]), axis=1)
-    # print(obstacles)
+    obstacles = np.delete(obstacles, np.argwhere(obstacles[:, 0] == x_start[0]), axis=0)
 
     # CUSTOM OBSTACLES FOR DEBUGGING ONLY
-    # obstacles = np.array([[15, 14, 15, 16], [18,  21, 20, 19]])
-    # obstacles = np.array([[14, 15, 16, 17], [20, 20, 20, 20]])
-    # obstacles = np.array([[12, 13, 14, 15], [20, 20, 20, 20]])
-    # obstacles = np.append(obstacles, np.array([[17, 18, 19, 20], [23, 23, 23, 23]]), axis=1)
+    obstacles = np.append(obstacles, np.array([[17, 17], [18, 17], [19, 17], [20, 17]]), axis=0)
 
-    num_obstacles = obstacles.shape[1]  # account for the loss of the obstacles that were too close
+    num_obstacles = len(obstacles)  # account for the loss of the obstacles that were too close
     # Export obstacle location to disk
     np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/obstacles_", data_subset_type, "_", idx, ".csv")),
                obstacles, delimiter=",")
@@ -48,51 +45,52 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     # The scene context will affect robot behaviour, ranging from unimpeded driving to being at a standstill
     scene_context_constant = np.random.uniform(0.0001, 1.0)
     while k < settings.MAX_ITERATIONS:
-        relative_positions = obstacles - np.tile(x_robot, (1, num_obstacles))
+        relative_positions = obstacles - np.tile(x_robot, (num_obstacles, 1))
 
-        for i in range(relative_positions.shape[1]):
-            if np.all(relative_positions[:, i] == [0, 0]):
-                print("Error: obstacle and robot are both at position:", obstacles[:, i],
+        for i in range(len(relative_positions)):
+            if np.all(relative_positions[i, :] == [0, 0]):
+                print("Error: obstacle and robot are both at position:", obstacles[i, :],
                       "so will now move robot slightly away from this")
-                relative_positions[:, i] = [1e-3, 1e-3]
+                relative_positions[i, :] = [1e-3, 1e-3]
                 print("k = ", k)
-        distances = np.sqrt(np.sum(np.square(relative_positions), axis=0))
+        distances = np.sqrt(np.sum(np.square(relative_positions), axis=1))
         idx_proximal = distances < settings.OBSTACLE_INFLUENCE_RADIUS
 
         if any(idx_proximal):
-            rho = np.tile(distances[idx_proximal], (2, 1))
-            v = relative_positions[:, idx_proximal]
+            rho = np.tile(distances[idx_proximal].reshape(1, -1).transpose(), (1, 2))
+            v = relative_positions[idx_proximal, :]
             d_rho_dx = -v / rho
             f_proximity = (1 / rho - 1 / settings.OBSTACLE_INFLUENCE_RADIUS) * 1 / (np.square(rho)) * d_rho_dx
 
             # Force due to obstacle "visibility" (high if in front of robot, low if to the side or behind)
             robot_angle_from_vertical = (robot_th[-1] - robot_th[0])
-            relative_angles = -np.arctan2(relative_positions[0, idx_proximal],
-                                          relative_positions[1, idx_proximal]) - robot_angle_from_vertical
+            relative_angles = -np.arctan2(relative_positions[idx_proximal, 0],
+                                          relative_positions[idx_proximal, 1]) - robot_angle_from_vertical
             relative_angles[relative_angles > np.pi] = relative_angles[relative_angles > np.pi] - 2 * np.pi
             relative_angles[relative_angles < -np.pi] = 2 * np.pi - relative_angles[relative_angles < -np.pi]
             angle_influence = (np.pi - np.abs(relative_angles)) / np.pi
 
-            # Force due to relevance in the goal quest
-            relevance_to_mission = np.array([relative_positions[1, idx_proximal]])
+            # Force due to relevance in the goal quest - obstacles that are not still ahead are given less importance
+            relevance_to_mission = relative_positions[idx_proximal, 1]
             relevance_to_mission[relevance_to_mission < 0] = 0
             relevance_to_mission[relevance_to_mission > 0] = 1
 
-            f_proximity *= (1 / 3 + angle_influence / 3 + relevance_to_mission / 3)
-            f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=1).reshape(-1, 1)
+            f_proximity *= (1 / 3 + angle_influence / 3 + relevance_to_mission / 3).reshape(-1, 1)
+            f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=0)  # .reshape(-1, 1)
         else:
             f_objects = np.array([0, 0]).reshape(-1, 1)
         f_goal = settings.GOAL_FORCE_MULTIPLIER * goal_error / np.linalg.norm(goal_error)
         f_total = f_goal + f_objects
+
         # This takes into account the natural slow-down that should happen when the robot is near obstacles (caution)
         max_velocity = min(settings.VELOCITY_LIMIT,
                            settings.NOMINAL_VELOCITY * min(distances) / settings.PROXIMITY_TO_OBSTACLE_CAUTION_FACTOR)
         f_total = f_total / np.linalg.norm(f_total) * min(max_velocity, np.linalg.norm(f_total))
         f_total *= scene_context_constant
-
         theta_robot = math.atan2(f_total[1], f_total[0])
         x_robot = x_robot + f_total
-        robot_xy = np.append(robot_xy, x_robot, axis=1)
+
+        robot_xy = np.append(robot_xy, x_robot.reshape(1, -1), axis=0)
         robot_th = np.append(robot_th, theta_robot)
         goal_error = x_goal - x_robot
         k += 1
@@ -100,8 +98,8 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     if save_plots:
         plt.figure(figsize=(10, 10))
         colours = ["red", "blue", "magenta", "green"]
-        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="obstacles")
-        draw_robot_poses(robot_xy[0, :], robot_xy[1, :], robot_th, colours[1])
+        plt.plot(obstacles[:, 0], obstacles[:, 1], "*", color=colours[0], label="obstacles")
+        draw_robot_poses(robot_xy[:, 0], robot_xy[:, 1], robot_th, colours[1])
         plt.plot(x_start[0], x_start[1], "o", color=colours[2])
         plt.plot(x_goal[0], x_goal[1], "o", color=colours[3])
         plt.grid()
@@ -115,23 +113,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     if idx % 100 == 0:
         print("Maze sim complete for", data_subset_type, "index:", idx)
 
-    data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
-    radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT
-    for i in range(num_obstacles):
-        data[(settings.MAP_SIZE - 1) - obstacles[1, i] - radius:
-             (settings.MAP_SIZE - 1) - obstacles[1, i] + radius + 1,
-        obstacles[0, i] - radius:obstacles[0, i] + radius + 1] = 255
-
-    # Draw robot position
-    # robot_x = int(settings.MAZE_IMAGE_DIMENSION / 2)
-    # robot_y = int(settings.MAZE_IMAGE_DIMENSION / 2)
-    # data[robot_x - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_x + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1,
-    # robot_y - settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT:robot_y + settings.ADDITIONAL_ROBOT_VISUAL_WEIGHT + 1] = 255
-
-    img = Image.fromarray(data, 'L')
-    img.save("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_", idx, ".png"))
-
-    return robot_xy, robot_th
+    return robot_xy, robot_th, obstacles
 
 
 def draw_robot_poses(x_poses, y_poses, thetas, colour):
@@ -142,9 +124,7 @@ def draw_robot_poses(x_poses, y_poses, thetas, colour):
 
     for i in range(len(x_poses)):
         th = -thetas[i]  # -(thetas[i] - np.pi / 2)
-        # print(th)
         rotation_matrix = np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
-        # print(rotation_matrix)
         triangle_vertices = np.matmul(basic_triangle, rotation_matrix)
         triangle_vertices[:, 0] = triangle_vertices[:, 0] + x_poses[i]
         triangle_vertices[:, 1] = triangle_vertices[:, 1] + y_poses[i]
@@ -156,17 +136,16 @@ def draw_robot_poses(x_poses, y_poses, thetas, colour):
 def generate_relative_poses(robot_xy, robot_th):
     robot_global_poses = []
     relative_poses = []
-    print("Robot xy shape:", robot_xy.shape[1])
-    for i in range(robot_xy.shape[1]):
-        print(i)
+
+    for i in range(len(robot_xy)):
         T_i = np.identity(4)
         th = robot_th[i]
         T_i[0, 0] = np.cos(th)
         T_i[0, 1] = -np.sin(th)
         T_i[1, 0] = np.sin(th)
         T_i[1, 1] = np.cos(th)
-        T_i[0, 3] = robot_xy[:, i][0]
-        T_i[1, 3] = robot_xy[:, i][1]
+        T_i[0, 3] = robot_xy[i, :][0]
+        T_i[1, 3] = robot_xy[i, :][1]
         robot_global_poses.append(T_i)
 
     # Loop runs for 1 less iteration because these are relative poses
@@ -194,10 +173,15 @@ def generate_maze_samples(num_samples, data_subset_type):
     save_plots = True
 
     for idx in range(num_samples):
-        xy_positions, thetas = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
-                                                                save_plots)
+        xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
+                                                                              save_plots)
         relative_poses = generate_relative_poses(xy_positions, thetas)
-        plot_obstacles_for_debugging(relative_poses, idx, split_data_path, save_obstacle_plots=True)
+        tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
+                                                                           save_obstacle_plots=True)
+        save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, True)
+        save_obstacles_as_images(t0_obstacles, split_data_path, data_subset_type, idx, time_frame="t0")
+        save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
+
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
           "and written to:", split_data_path)
 
@@ -226,8 +210,8 @@ def save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_t
         plt.close()
 
 
-def plot_obstacles_for_debugging(relative_poses, idx, split_data_path, data_subset_type=settings.TRAIN_SUBSET,
-                                 save_obstacle_plots=False):
+def generate_future_obstacle_positions(relative_poses, idx, split_data_path, data_subset_type=settings.TRAIN_SUBSET,
+                                       save_obstacle_plots=False):
     T_origin = np.identity(4)
     th_origin = 0
     T_origin[0, 0] = np.cos(th_origin)
@@ -239,7 +223,7 @@ def plot_obstacles_for_debugging(relative_poses, idx, split_data_path, data_subs
 
     # # Manual transform for debugging...
     # T_i = np.identity(4)
-    # th = -np.pi/32
+    # th = np.pi/32
     # x = 0
     # y = 0
     # T_i[0, 0] = np.cos(th)
@@ -266,31 +250,47 @@ def plot_obstacles_for_debugging(relative_poses, idx, split_data_path, data_subs
         settings.MAZE_IMAGE_DIR + data_subset_type + "/obstacles_" + data_subset_type + "_" + str(idx) + ".csv",
         delimiter=",")
     obs_arr = np.array(obstacles)
-    obs_arr = np.r_[obs_arr, np.zeros([1, obs_arr.shape[1]]), np.ones([1, obs_arr.shape[1]])]
-    tm1_obstacles = []
-    for i in range(obstacles.shape[1]):
-        new_obstacle_position = T_origin @ np.linalg.inv(first_relative_pose) @ np.linalg.inv(T_origin) @ obs_arr[:, i]
-        tm1_obstacles.append(new_obstacle_position)
+    obs_arr = np.c_[obs_arr, np.zeros([len(obs_arr), 1]), np.ones([len(obs_arr), 1])]
+    tp1_obstacles = []
+    for i in range(len(obstacles)):
+        new_obstacle_position = T_origin @ first_relative_pose @ np.linalg.inv(T_origin) @ obs_arr[i, :]
+        tp1_obstacles.append(new_obstacle_position)
     # Bump off 1 relative pose that was used to generate the previous motion so that the labels only carry future poses
     # and not the previous one(s)
     relative_poses = relative_poses[1:]
-    save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, True)
 
     if save_obstacle_plots:
-        tm1_obstacles = np.array(tm1_obstacles)[:, 0:2]
+        tp1_obstacles = np.array(tp1_obstacles)[:, 0:2]
 
         plt.figure(figsize=(10, 10))
         colours = ["red", "blue"]
-        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="t0 obstacles")
-        plt.plot(tm1_obstacles[:, 0], tm1_obstacles[:, 1], ".", color=colours[1], label="tm1 obstacles")
+        plt.plot(obstacles[:, 0], obstacles[:, 1], "*", color=colours[0], label="t0 obstacles")
+        plt.plot(tp1_obstacles[:, 0], tp1_obstacles[:, 1], ".", color=colours[1], label="tp1 obstacles")
         plt.grid()
         plt.xlim(0, settings.MAP_SIZE)
         plt.ylim(0, settings.MAP_SIZE)
         lines = [plt.Line2D([0], [0], color=c, linewidth=0, marker='.', markersize=20) for c in colours]
-        labels = ["t0 obstacles", "tm1 obstacles"]
+        labels = ["t0 obstacles", "tp1 obstacles"]
         plt.legend(lines, labels)
         plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_obstacles_", idx, ".pdf"))
         plt.close()
+
+    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/tp1_obstacles_", data_subset_type, "_", idx, ".csv")),
+               tp1_obstacles, delimiter=",")
+    return tp1_obstacles, relative_poses
+
+
+def save_obstacles_as_images(obstacles, split_data_path, data_subset_type, idx, time_frame):
+    if time_frame is "tp1":
+        obstacles = np.round(obstacles).astype(int)
+    data = np.zeros((settings.MAP_SIZE, settings.MAP_SIZE), dtype=np.uint8)
+    radius = settings.ADDITIONAL_OBSTACLE_VISUAL_WEIGHT
+    for i in range(len(obstacles)):
+        data[(settings.MAP_SIZE - 1) - obstacles[i, 1] - radius:
+             (settings.MAP_SIZE - 1) - obstacles[i, 1] + radius + 1,
+        obstacles[i, 0] - radius:obstacles[i, 0] + radius + 1] = 255
+    img = Image.fromarray(data, 'L')
+    img.save("%s%s%s%s%i%s%s%s" % (split_data_path, "/", data_subset_type, "_", idx, "_", time_frame, ".png"))
 
 
 if __name__ == "__main__":
