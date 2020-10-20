@@ -30,15 +30,14 @@ def generate_subset_evaluation_plots(data_subset_type, model, results_path, num_
         img = data_loader.dataset[i]['image'].unsqueeze_(0)
         pose_labels = data_loader.dataset[i]['pose_data']
         pose_from_model = model(img).detach().numpy()
-        pose_estimate = np.transpose(
-            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
+        pose_estimate = (pose_from_model.squeeze(0) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
         plt.figure(figsize=(15, 5))
-        plt.plot(pose_labels[0], 'r--', alpha=0.5, label="dx ground truth")
-        plt.plot(pose_labels[1], 'g--', alpha=0.5, label="dy ground truth")
-        plt.plot(pose_labels[2], 'b--', alpha=0.5, label="dth ground truth")
-        plt.plot(pose_estimate[0], 'r', label="dx prediction")
-        plt.plot(pose_estimate[1], 'g', label="dy prediction")
-        plt.plot(pose_estimate[2], 'b', label="dth prediction")
+        plt.plot(pose_labels[:, 0], 'r--', alpha=0.5, label="dx ground truth")
+        plt.plot(pose_labels[:, 1], 'g--', alpha=0.5, label="dy ground truth")
+        plt.plot(pose_labels[:, 2], 'b--', alpha=0.5, label="dth ground truth")
+        plt.plot(pose_estimate[:, 0], 'r', label="dx prediction")
+        plt.plot(pose_estimate[:, 1], 'g', label="dy prediction")
+        plt.plot(pose_estimate[:, 2], 'b', label="dth prediction")
 
         plt.ylim(-1, 1)
         plt.xlabel("Index")
@@ -71,8 +70,7 @@ def calculate_rmse(data_subset_type, model, logger):
         # t3 = time.time() - now - t1 - t2
         pose_from_model = model(img).detach().numpy()  # this is also slow
         # t4 = time.time() - now - t1 - t2 - t3
-        pose_estimate = np.transpose(
-            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
+        pose_estimate = (pose_from_model.squeeze(0) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
         rmse = np.sqrt(np.mean(np.square(pose_labels - pose_estimate) / len(pose_labels), axis=1))
         cumulative_rmse += rmse
         # loop_time = time.time() - now
@@ -100,8 +98,7 @@ def export_ground_truth_and_estimated_poses(results_path, data_subset_type, mode
         img = data_at_idx['image'].unsqueeze_(0)
         pose_labels = data_at_idx['pose_data'].numpy()
         pose_from_model = model(img).detach().numpy()
-        pose_estimate = np.transpose(
-            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
+        pose_estimate = (pose_from_model.squeeze(0) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
 
         np.savetxt(("%s%s%s%s%s%s" % (subset_fig_path, "/ground_truth_", data_subset_type, "_", idx, ".csv")),
                    pose_labels, delimiter=",",
@@ -122,8 +119,8 @@ def export_figures_for_poses(results_path, data_subset_type, model, num_samples)
     Path(subset_fig_path).mkdir(parents=True, exist_ok=True)
     print("Saving pose trajectory figures to:", subset_fig_path)
 
-    x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2]).reshape(2, -1)
-    x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE]).reshape(2, -1)
+    x_start = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE / 2])
+    x_goal = np.array([settings.MAP_SIZE / 2, settings.MAP_SIZE])
 
     for idx in range(num_samples):
         obstacles = np.genfromtxt(
@@ -134,15 +131,14 @@ def export_figures_for_poses(results_path, data_subset_type, model, num_samples)
         img = data_at_idx['image'].unsqueeze_(0)
         pose_labels = data_at_idx['pose_data'].numpy()
         pose_from_model = model(img).detach().numpy()
-        pose_estimate = np.transpose(
-            (np.transpose(pose_from_model.squeeze(0)) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN)
+        pose_estimate = (pose_from_model.squeeze(0) * settings.MAZE_SPEED_STD_DEV) + settings.MAZE_SPEED_MEAN
 
         x_robot, y_robot, th_robot = get_global_poses(x_start, pose_labels)
         predicted_x_robot, predicted_y_robot, predicted_th_robot = get_global_poses(x_start, pose_estimate)
 
         plt.figure(figsize=(10, 10))
         colours = ["red", "blue", "orange", "magenta", "green"]
-        plt.plot(obstacles[0, :], obstacles[1, :], "*", color=colours[0], label="obstacles")
+        plt.plot(obstacles[:, 0], obstacles[:, 1], "*", color=colours[0], label="obstacles")
         draw_robot_poses(x_robot, y_robot, th_robot, colours[1])
         draw_robot_poses(predicted_x_robot, predicted_y_robot, predicted_th_robot, colours[2])
         plt.plot(x_start[0], x_start[1], "o", color=colours[3])
@@ -174,15 +170,15 @@ def get_global_poses(x_start, relative_poses_list):
     y_robot = []
     th_robot = []
 
-    for i in range(0, relative_poses_list.shape[1]):
+    for i in range(len(relative_poses_list)):
         T_i = np.identity(3)
-        th = relative_poses_list[2, i]
+        th = relative_poses_list[i, 2]
         T_i[0, 0] = np.cos(th)
         T_i[0, 1] = -np.sin(th)
         T_i[1, 0] = np.sin(th)
         T_i[1, 1] = np.cos(th)
-        T_i[0, 2] = relative_poses_list[0, i]
-        T_i[1, 2] = relative_poses_list[1, i]
+        T_i[0, 2] = relative_poses_list[i, 0]
+        T_i[1, 2] = relative_poses_list[i, 1]
         relative_poses.append(T_i)
 
     for i in range(0, len(relative_poses)):
@@ -207,20 +203,20 @@ def do_quick_export(hparams, model, model_path):
     logger.info("Loaded model from " + model_path + " -> ready to evaluate.")
 
     print("Exporting trajectories as csv data...")
-    num_trajectories_to_export = 10
+    num_trajectories_to_export = 5
     export_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
-    export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
-    export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
+    # export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
+    # export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
 
     print("Generating evaluation plots...")
-    num_samples = 10
+    num_samples = 5
     export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
+    # export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
+    # export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
 
     generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
 
     # This can take a long time, and is not really as useful as the distance-based metrics
     # print("Calculating average RMSE (over entire subset)")

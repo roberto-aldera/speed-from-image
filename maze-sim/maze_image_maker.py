@@ -21,22 +21,22 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
     # Generate obstacles in random positions across the map
     obstacles_x = [random.randrange(settings.MAX_OBSTACLE_X_POSITION_FROM_CENTRE,
                                     (settings.MAP_SIZE - 1) - settings.MAX_OBSTACLE_X_POSITION_FROM_CENTRE,
-                                    settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for x in range(settings.MAX_NUM_OBSTACLES)]
+                                    settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for _ in range(settings.MAX_NUM_OBSTACLES)]
     obstacles_y = [random.randrange(settings.MIN_OBSTACLE_Y_POSITION,
                                     (settings.MAP_SIZE - 1) - 5,
-                                    settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for x in range(settings.MAX_NUM_OBSTACLES)]
+                                    settings.MIN_DISTANCE_BETWEEN_OBSTACLES) for _ in range(settings.MAX_NUM_OBSTACLES)]
 
     obstacles = list(zip(obstacles_x, obstacles_y))
 
     # Remove any obstacles that are too close to the robot's starting position
     relative_positions = obstacles - np.tile(x_start, (settings.MAX_NUM_OBSTACLES, 1))
     distances = np.sqrt(np.sum(np.square(relative_positions), axis=1))
-    obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=1)
+    obstacles = np.delete(obstacles, np.argwhere(distances < settings.EXCLUSION_ZONE_RADIUS), axis=0)
     # Remove obstacles directly ahead of starting position
     obstacles = np.delete(obstacles, np.argwhere(obstacles[:, 0] == x_start[0]), axis=0)
 
     # CUSTOM OBSTACLES FOR DEBUGGING ONLY
-    obstacles = np.append(obstacles, np.array([[17, 17], [18, 17], [19, 17], [20, 17]]), axis=0)
+    # obstacles = np.append(obstacles, np.array([[17, 17], [18, 17], [19, 17], [20, 17]]), axis=0)
 
     num_obstacles = len(obstacles)  # account for the loss of the obstacles that were too close
     # Export obstacle location to disk
@@ -171,17 +171,17 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = True
+    save_plots = False
 
     for idx in range(num_samples):
         xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
                                                                               save_plots)
         relative_poses = generate_relative_poses(xy_positions, thetas)
-        tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
-                                                                           save_obstacle_plots=True)
-        save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, True)
+        # tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
+        #                                                                    save_obstacle_plots=save_plots)
+        save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, save_plots=save_plots)
         save_obstacles_as_images(t0_obstacles, split_data_path, data_subset_type, idx, time_frame="t0")
-        save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
+        # save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
 
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
           "and written to:", split_data_path)
@@ -303,6 +303,6 @@ if __name__ == "__main__":
     start_time = time.time()
 
     generate_maze_samples(settings.TRAIN_SET_SIZE, settings.TRAIN_SUBSET)
-    # generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
-    # generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
+    generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
+    generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
     print("--- Dataset generation execution time: %s seconds ---" % (time.time() - start_time))

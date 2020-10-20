@@ -208,7 +208,7 @@ class ResNet(pl.LightningModule):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         # attempt at making this work for more than just dx (so dy, dth)
-        x = x.view(-1, settings.NUM_POSE_DIMS, settings.MAX_ITERATIONS)
+        x = x.view(-1, settings.MAX_ITERATIONS, settings.NUM_POSE_DIMS)
 
         return x
 

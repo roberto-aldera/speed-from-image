@@ -20,8 +20,8 @@ def compose_se2(x, y, angle):
 
 def trajectory_distances(poses):
     dist = [0.]
-    for i in range(0, poses.shape[1]):
-        p = poses[:, i]
+    for i in range(len(poses)):
+        p = poses[i, :]
         dx = p[0]
         dy = p[1]
 
@@ -44,12 +44,12 @@ def get_errors(ground_truth_poses, estimated_poses, segment_lengths):
     gt_poses = [np.eye(3)]
     est_poses = [np.eye(3)]
 
-    for i in range(0, ground_truth_poses.shape[1]):
-        se2 = gt_poses[-1] @ compose_se2(ground_truth_poses[0, i], ground_truth_poses[1, i], ground_truth_poses[2, i])
+    for i in range(len(ground_truth_poses)):
+        se2 = gt_poses[-1] @ compose_se2(ground_truth_poses[i, 0], ground_truth_poses[i, 1], ground_truth_poses[i, 2])
         gt_poses.append(se2)
 
-    for i in range(0, estimated_poses.shape[1]):
-        se2 = est_poses[-1] @ compose_se2(estimated_poses[0, i], estimated_poses[1, i], estimated_poses[2, i])
+    for i in range(len(estimated_poses)):
+        se2 = est_poses[-1] @ compose_se2(estimated_poses[i, 0], estimated_poses[i, 1], estimated_poses[i, 2])
         est_poses.append(se2)
 
     for length in segment_lengths:
@@ -143,7 +143,7 @@ def calculate_error_metrics(ground_truth_poses, estimated_poses, segment_lengths
 
 def generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors):
     yaw_errors = np.array(yaw_errors) * 180 / np.pi
-    translational_errors = np.array(translational_errors) * 100 # convert to percentage
+    translational_errors = np.array(translational_errors) * 100  # convert to percentage
     mean_translational_error = np.mean(translational_errors)
     mean_yaw_error = np.mean(yaw_errors)
     print("Errors for", data_subset_type, "subset:")
@@ -195,23 +195,6 @@ def generate_error_metrics_plots(params, segment_lengths, data_subset_type, tran
     plt.close()
 
 
-def main():
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument('--validation_path', type=str, default="", help='path to validation folder')
-    parser.add_argument('--num_samples', type=int, default=10, help='Number of scenarios on which to run metrics')
-
-    params = parser.parse_args()
-    print("Saving pose trajectories metrics to:", params.validation_path)
-
-    segment_lengths = [1, 2, 3, 4, 5, 6, 7]
-    decimal_precision = 3
-    np.set_printoptions(precision=decimal_precision)
-
-    calculate_and_export_distance_metrics(params, settings.TRAIN_SUBSET, segment_lengths, decimal_precision)
-    calculate_and_export_distance_metrics(params, settings.VAL_SUBSET, segment_lengths, decimal_precision)
-    calculate_and_export_distance_metrics(params, settings.TEST_SUBSET, segment_lengths, decimal_precision)
-
-
 def calculate_and_export_distance_metrics(params, data_subset_type, segment_lengths, decimal_precision):
     translational_errors = []
     yaw_errors = []
@@ -233,6 +216,23 @@ def calculate_and_export_distance_metrics(params, data_subset_type, segment_leng
     yaw_errors_df.to_csv(params.validation_path + data_subset_type + "/" + data_subset_type + "_yaw_errors.csv")
 
     generate_error_metrics_plots(params, segment_lengths, data_subset_type, translational_errors, yaw_errors)
+
+
+def main():
+    parser = ArgumentParser(add_help=False)
+    parser.add_argument('--validation_path', type=str, default="", help='path to validation folder')
+    parser.add_argument('--num_samples', type=int, default=10, help='Number of scenarios on which to run metrics')
+
+    params = parser.parse_args()
+    print("Saving pose trajectories metrics to:", params.validation_path)
+
+    segment_lengths = [1, 2, 3, 4, 5]
+    decimal_precision = 3
+    np.set_printoptions(precision=decimal_precision)
+
+    calculate_and_export_distance_metrics(params, settings.TRAIN_SUBSET, segment_lengths, decimal_precision)
+    # calculate_and_export_distance_metrics(params, settings.VAL_SUBSET, segment_lengths, decimal_precision)
+    # calculate_and_export_distance_metrics(params, settings.TEST_SUBSET, segment_lengths, decimal_precision)
 
 
 if __name__ == '__main__':

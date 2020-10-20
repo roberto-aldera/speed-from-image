@@ -36,7 +36,7 @@ class MazeDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + ".png"
+        img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + "_t0" + ".png"
         image = np.array(Image.open(img_name))
         pose_data = pd.read_csv(
             self.root_dir + "/" + "speed_labels_" + self.data_subset_type + "_" + str(idx) + ".csv",
@@ -71,7 +71,7 @@ class Normalise(object):
         image, pose_data = sample['image'], sample['pose_data']
         mean = settings.MAZE_SPEED_MEAN
         std_dev = settings.MAZE_SPEED_STD_DEV
-        scaled_pose_data = np.transpose((np.transpose(pose_data) - mean) / std_dev)
+        scaled_pose_data = (pose_data - mean) / std_dev
         return {'image': image,
                 'pose_data': scaled_pose_data}
 
@@ -86,30 +86,32 @@ def main():
     maze_elm_0 = maze_dataset[0]
     poses = np.array(maze_elm_0['pose_data'])
 
-    plot_figures = False
-
-    for maze_idx in range(1, len(maze_dataset)):
+    plot_figures = True
+    num_examples_to_plot = 3  # len(maze_dataset)
+    for maze_idx in range(num_examples_to_plot):
         if maze_idx % 100 == 0:
             print("Running dataset loader main function for sample index:", maze_idx)
         maze = maze_dataset[maze_idx]
         # print(maze_idx, maze['image'].shape, maze['pose_data'].shape)
-        poses = np.append(poses, maze['pose_data'], axis=1)
+        poses = np.append(poses, maze['pose_data'], axis=0)
 
         if plot_figures:
             # plt.figure(figsize=(1, 1))
             # plt.imshow(maze['image'], cmap='gray', vmin=0, vmax=255)
             plt.figure(figsize=(10, 5))
-            plt.plot(maze['pose_data'][0, :], '.-', label="dx")
-            plt.plot(maze['pose_data'][1, :], '.-', label="dy")
-            plt.plot(maze['pose_data'][2, :], '.-', label="dth")
+            plt.plot(maze['pose_data'][:, 0], '.-', label="dx")
+            plt.plot(maze['pose_data'][:, 1], '.-', label="dy")
+            plt.plot(maze['pose_data'][:, 2], '.-', label="dth")
             # plt.ylim(-1, 1)
             plt.grid()
             plt.legend()
             plt.savefig("%s%i%s" % ("/workspace/Desktop/speeds/idx-", maze_idx, ".png"))
             plt.close()
     print("shape:", poses.shape)
-    print("Means:", np.mean(poses, axis=1))
-    print("Std dev:", np.std(poses, axis=1))
+    means = np.mean(poses, axis=0)
+    std_devs = np.std(poses, axis=0)
+    print("Means:", means[0], ",", means[1], ",", means[2])
+    print("Std dev:", std_devs[0], ",", std_devs[1], ",", std_devs[2])
 
 
 if __name__ == "__main__":
