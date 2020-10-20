@@ -16,5 +16,15 @@ def main():
     plt.close()
 
 
+def playground():
+    print("Playground script...")
+    my_array = np.array([0, 1, 2, 3, 4, np.NaN])
+    array_mean = np.nanmean(my_array)
+    print("Array is:", my_array)
+    print("Array mean:", array_mean)
+    print("Finished!")
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    playground()
