@@ -171,14 +171,16 @@ def get_global_poses(x_start, relative_poses_list):
     th_robot = []
 
     for i in range(len(relative_poses_list)):
+        # Manually adjust transform to be in global frame
         T_i = np.identity(3)
-        th = relative_poses_list[i, 2]
+        th = -(relative_poses_list[i, 2])
         T_i[0, 0] = np.cos(th)
         T_i[0, 1] = -np.sin(th)
         T_i[1, 0] = np.sin(th)
         T_i[1, 1] = np.cos(th)
         T_i[0, 2] = relative_poses_list[i, 0]
-        T_i[1, 2] = relative_poses_list[i, 1]
+        T_i[1, 2] = -(relative_poses_list[i, 1])
+
         relative_poses.append(T_i)
 
     for i in range(0, len(relative_poses)):
