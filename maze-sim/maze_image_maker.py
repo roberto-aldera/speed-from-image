@@ -79,7 +79,7 @@ def run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type, sav
             f_proximity *= (1 / 3 + angle_influence / 3 + relevance_to_mission / 3).reshape(-1, 1)
             f_objects = settings.OBSTACLE_FORCE_MULTIPLIER * np.sum(f_proximity, axis=0)  # .reshape(-1, 1)
         else:
-            f_objects = np.array([0, 0]).reshape(-1, 1)
+            f_objects = np.array([0, 0])
         f_goal = settings.GOAL_FORCE_MULTIPLIER * goal_error / np.linalg.norm(goal_error)
         f_total = f_goal + f_objects
 
@@ -171,7 +171,7 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = False
+    save_plots = True
 
     for idx in range(num_samples):
         xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
@@ -282,6 +282,7 @@ def generate_future_obstacle_positions(relative_poses, idx, split_data_path, dat
         plt.legend(lines, labels)
         plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_obstacles_", idx, ".pdf"))
         plt.close()
+        print("Saved obstacle plot for index:", idx)
 
     return tp1_obstacles, relative_poses
 
