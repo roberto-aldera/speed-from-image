@@ -177,11 +177,12 @@ def generate_maze_samples(num_samples, data_subset_type):
         xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
                                                                               save_plots)
         relative_poses = generate_relative_poses(xy_positions, thetas)
-        # tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
-        #                                                                    save_obstacle_plots=save_plots)
+        tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
+                                                                           data_subset_type,
+                                                                           save_obstacle_plots=save_plots)
         save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, save_plots=save_plots)
         save_obstacles_as_images(t0_obstacles, split_data_path, data_subset_type, idx, time_frame="t0")
-        # save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
+        save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
 
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
           "and written to:", split_data_path)
@@ -216,7 +217,7 @@ def save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_t
         plt.close()
 
 
-def generate_future_obstacle_positions(relative_poses, idx, split_data_path, data_subset_type=settings.TRAIN_SUBSET,
+def generate_future_obstacle_positions(relative_poses, idx, split_data_path, data_subset_type,
                                        save_obstacle_plots=False):
     T_origin = np.identity(4)
     th_origin = 0
@@ -264,10 +265,11 @@ def generate_future_obstacle_positions(relative_poses, idx, split_data_path, dat
     # Bump off 1 relative pose that was used to generate the previous motion so that the labels only carry future poses
     # and not the previous one(s)
     relative_poses = relative_poses[1:]
+    tp1_obstacles = np.array(tp1_obstacles)[:, 0:2]
+    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/tp1_obstacles_", data_subset_type, "_", idx, ".csv")),
+               tp1_obstacles, delimiter=",")
 
     if save_obstacle_plots:
-        tp1_obstacles = np.array(tp1_obstacles)[:, 0:2]
-
         plt.figure(figsize=(10, 10))
         colours = ["red", "blue"]
         plt.plot(obstacles[:, 0], obstacles[:, 1], "*", color=colours[0], label="t0 obstacles")
@@ -281,8 +283,6 @@ def generate_future_obstacle_positions(relative_poses, idx, split_data_path, dat
         plt.savefig("%s%s%s%s%i%s" % (split_data_path, "/", data_subset_type, "_obstacles_", idx, ".pdf"))
         plt.close()
 
-    np.savetxt(("%s%s%s%s%s%s" % (split_data_path, "/tp1_obstacles_", data_subset_type, "_", idx, ".csv")),
-               tp1_obstacles, delimiter=",")
     return tp1_obstacles, relative_poses
 
 
