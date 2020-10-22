@@ -111,7 +111,8 @@ class Bottleneck(nn.Module):
 
 class ResNet(pl.LightningModule):
 
-    def __init__(self, hparams, block=BasicBlock, layers=[2, 2, 2, 2], num_classes=20, zero_init_residual=False,
+    def __init__(self, hparams, block=BasicBlock, layers=[2, 2, 2, 2], num_classes=settings.TOTAL_POSES,
+                 zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None,
                  norm_layer=None):
         super(ResNet, self).__init__()
@@ -131,7 +132,8 @@ class ResNet(pl.LightningModule):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(1, self.inplanes, kernel_size=7, stride=2, padding=3,
+        input_channels = 2  # 1
+        self.conv1 = nn.Conv2d(input_channels, self.inplanes, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
@@ -191,7 +193,7 @@ class ResNet(pl.LightningModule):
         return nn.Sequential(*layers)
 
     def _forward_impl(self, x):
-        x = x.unsqueeze_(1)
+        # x = x.unsqueeze_(1)
 
         # See note [TorchScript super()]
         x = self.conv1(x)
@@ -208,7 +210,7 @@ class ResNet(pl.LightningModule):
         x = torch.flatten(x, 1)
         x = self.fc(x)
         # attempt at making this work for more than just dx (so dy, dth)
-        x = x.view(-1, settings.MAX_ITERATIONS, settings.NUM_POSE_DIMS)
+        x = x.view(-1, settings.TOTAL_POSES, settings.NUM_POSE_DIMS)
 
         return x
 

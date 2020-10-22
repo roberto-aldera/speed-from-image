@@ -36,12 +36,13 @@ class MazeDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = self.root_dir + self.data_subset_type + "_" + str(idx) + "_t0" + ".png"
-        image = np.array(Image.open(img_name))
+        base_image_path = self.root_dir + self.data_subset_type + "_" + str(idx)
+        image_names = base_image_path + "_t0" + ".png", base_image_path + "_tp1" + ".png"
+        images = np.array([np.array(Image.open(filename)) for filename in image_names])
         pose_data = pd.read_csv(
             self.root_dir + "/" + "speed_labels_" + self.data_subset_type + "_" + str(idx) + ".csv",
             header=None)
-        sample = {'image': image, 'pose_data': pose_data}
+        sample = {'image': images, 'pose_data': pose_data}
 
         if self.transform:
             sample = self.transform(sample)
@@ -92,12 +93,15 @@ def main():
         if maze_idx % 100 == 0:
             print("Running dataset loader main function for sample index:", maze_idx)
         maze = maze_dataset[maze_idx]
-        # print(maze_idx, maze['image'].shape, maze['pose_data'].shape)
+        print("Maze index, image shape, and pose shape:", maze_idx, maze['image'].shape, maze['pose_data'].shape)
         poses = np.append(poses, maze['pose_data'], axis=0)
 
         if plot_figures:
-            # plt.figure(figsize=(1, 1))
-            # plt.imshow(maze['image'], cmap='gray', vmin=0, vmax=255)
+            plt.figure(figsize=(1, 1))
+            plt.imshow(maze['image'][0, :, :], cmap='gray', vmin=0, vmax=255)
+            plt.savefig("%s%i%s" % ("/workspace/Desktop/speeds/image-idx-", maze_idx, ".png"))
+            plt.close()
+
             plt.figure(figsize=(10, 5))
             plt.plot(maze['pose_data'][:, 0], '.-', label="dx")
             plt.plot(maze['pose_data'][:, 1], '.-', label="dy")
