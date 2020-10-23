@@ -171,7 +171,7 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = True
+    save_plots = False
 
     for idx in range(num_samples):
         xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,

@@ -207,18 +207,18 @@ def do_quick_export(hparams, model, model_path):
     print("Exporting trajectories as csv data...")
     num_trajectories_to_export = 5
     export_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
-    # export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
-    # export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
 
     print("Generating evaluation plots...")
     num_samples = 5
     export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
-    # export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
-    # export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
 
     generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    # generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
 
     # This can take a long time, and is not really as useful as the distance-based metrics
     # print("Calculating average RMSE (over entire subset)")

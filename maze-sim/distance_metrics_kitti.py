@@ -225,8 +225,8 @@ def main():
     np.set_printoptions(precision=decimal_precision)
 
     calculate_and_export_distance_metrics(params, settings.TRAIN_SUBSET, segment_lengths, decimal_precision)
-    # calculate_and_export_distance_metrics(params, settings.VAL_SUBSET, segment_lengths, decimal_precision)
-    # calculate_and_export_distance_metrics(params, settings.TEST_SUBSET, segment_lengths, decimal_precision)
+    calculate_and_export_distance_metrics(params, settings.VAL_SUBSET, segment_lengths, decimal_precision)
+    calculate_and_export_distance_metrics(params, settings.TEST_SUBSET, segment_lengths, decimal_precision)
 
 
 if __name__ == '__main__':

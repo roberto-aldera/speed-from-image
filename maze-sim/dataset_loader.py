@@ -87,13 +87,14 @@ def main():
     maze_elm_0 = maze_dataset[0]
     poses = np.array(maze_elm_0['pose_data'])
 
-    plot_figures = True
-    num_examples_to_plot = 3  # len(maze_dataset)
+    plot_figures = False
+    # num_examples_to_plot = 3
+    num_examples_to_plot = len(maze_dataset)
     for maze_idx in range(num_examples_to_plot):
         if maze_idx % 100 == 0:
             print("Running dataset loader main function for sample index:", maze_idx)
         maze = maze_dataset[maze_idx]
-        print("Maze index, image shape, and pose shape:", maze_idx, maze['image'].shape, maze['pose_data'].shape)
+        # print("Maze index, image shape, and pose shape:", maze_idx, maze['image'].shape, maze['pose_data'].shape)
         poses = np.append(poses, maze['pose_data'], axis=0)
 
         if plot_figures:
