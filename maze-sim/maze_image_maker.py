@@ -171,18 +171,37 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = False
+    save_plots = True
+    print_timing_info = True
 
     for idx in range(num_samples):
+        t0_start = time.time()
         xy_positions, thetas, t0_obstacles = run_maze_sim_and_generate_images(idx, split_data_path, data_subset_type,
                                                                               save_plots)
+        t0_end = time.time() - t0_start
+        t1_start = time.time()
         relative_poses = generate_relative_poses(xy_positions, thetas)
+        t1_end = time.time() - t1_start
+        t2_start = time.time()
         tp1_obstacles, relative_poses = generate_future_obstacle_positions(relative_poses, idx, split_data_path,
                                                                            data_subset_type,
                                                                            save_obstacle_plots=save_plots)
+        t2_end = time.time() - t2_start
+        t3_start = time.time()
         save_relative_poses_as_labels(relative_poses, split_data_path, data_subset_type, idx, save_plots=save_plots)
+        t3_end = time.time() - t3_start
+        t4_start = time.time()
         save_obstacles_as_images(t0_obstacles, split_data_path, data_subset_type, idx, time_frame="t0")
         save_obstacles_as_images(tp1_obstacles, split_data_path, data_subset_type, idx, time_frame="tp1")
+        t4_end = time.time() - t4_start
+        total_time = time.time() - t0_start
+        if print_timing_info:
+            print("run_maze_sim_and_generate_images duration:", t0_end)
+            print("generate_relative_poses duration:", t1_end)
+            print("generate_future_obstacle_positions duration:", t2_end)
+            print("save_relative_poses_as_labels duration:", t3_end)
+            print("save_obstacles_as_images duration:", t4_end)
+            print("Total time: ", total_time)
 
     print("Generated", num_samples, data_subset_type, "samples, with dim =", settings.MAZE_IMAGE_DIMENSION,
           "and written to:", split_data_path)
@@ -298,6 +317,7 @@ def save_obstacles_as_images(obstacles, split_data_path, data_subset_type, idx, 
         obstacles[i, 0] - radius:obstacles[i, 0] + radius + 1] = 255
     img = Image.fromarray(data, 'L')
     img.save("%s%s%s%s%i%s%s%s" % (split_data_path, "/", data_subset_type, "_", idx, "_", time_frame, ".png"))
+    img.close()
 
 
 if __name__ == "__main__":
