@@ -39,7 +39,7 @@ def generate_subset_evaluation_plots(data_subset_type, model, results_path, num_
         plt.plot(pose_estimate[:, 1], 'g', label="dy prediction")
         plt.plot(pose_estimate[:, 2], 'b', label="dth prediction")
 
-        plt.ylim(-1, 1)
+        # plt.ylim(-1, 1)
         plt.xlabel("Index")
         plt.ylabel("dx")
         plt.title("%s%s%s" % ("Performance on ", data_subset_type, " set example"))
@@ -205,20 +205,18 @@ def do_quick_export(hparams, model, model_path):
     logger.info("Loaded model from " + model_path + " -> ready to evaluate.")
 
     print("Exporting trajectories as csv data...")
-    num_trajectories_to_export = 5
-    export_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, num_trajectories_to_export)
-    export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, num_trajectories_to_export)
-    export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, num_trajectories_to_export)
+    export_ground_truth_and_estimated_poses(results_path, settings.TRAIN_SUBSET, model, hparams.num_samples_to_evaluate)
+    export_ground_truth_and_estimated_poses(results_path, settings.VAL_SUBSET, model, hparams.num_samples_to_evaluate)
+    export_ground_truth_and_estimated_poses(results_path, settings.TEST_SUBSET, model, hparams.num_samples_to_evaluate)
 
     print("Generating evaluation plots...")
-    num_samples = 5
-    export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, num_samples)
-    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, num_samples)
+    export_figures_for_poses(results_path, settings.TRAIN_SUBSET, model, hparams.num_samples_to_evaluate)
+    export_figures_for_poses(results_path, settings.VAL_SUBSET, model, hparams.num_samples_to_evaluate)
+    export_figures_for_poses(results_path, settings.TEST_SUBSET, model, hparams.num_samples_to_evaluate)
 
-    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, num_samples)
-    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, num_samples)
+    generate_subset_evaluation_plots(settings.TRAIN_SUBSET, model, results_path, hparams.num_samples_to_evaluate)
+    generate_subset_evaluation_plots(settings.VAL_SUBSET, model, results_path, hparams.num_samples_to_evaluate)
+    generate_subset_evaluation_plots(settings.TEST_SUBSET, model, results_path, hparams.num_samples_to_evaluate)
 
     # This can take a long time, and is not really as useful as the distance-based metrics
     # print("Calculating average RMSE (over entire subset)")
@@ -234,6 +232,8 @@ def main():
     Path(settings.MAZE_MODEL_DIR).mkdir(parents=True, exist_ok=True)
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--model_name', type=str, default=settings.ARCHITECTURE_TYPE, help='lenet or resnet')
+    parser.add_argument('--num_samples_to_evaluate', type=int, default=10,
+                        help='number of samples to export results of for each data subset')
 
     temp_args, _ = parser.parse_known_args()
     # let the model add what it wants

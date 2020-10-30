@@ -171,8 +171,8 @@ def generate_maze_samples(num_samples, data_subset_type):
     if split_data_path.exists() and split_data_path.is_dir():
         shutil.rmtree(split_data_path)
     split_data_path.mkdir(parents=True)
-    save_plots = True
-    print_timing_info = True
+    save_plots = False
+    print_timing_info = False
 
     for idx in range(num_samples):
         t0_start = time.time()
@@ -322,7 +322,8 @@ def save_obstacles_as_images(obstacles, split_data_path, data_subset_type, idx, 
 
 if __name__ == "__main__":
     start_time = time.time()
-
+    # import pdb
+    # pdb.set_trace()
     generate_maze_samples(settings.TRAIN_SET_SIZE, settings.TRAIN_SUBSET)
     generate_maze_samples(settings.VAL_SET_SIZE, settings.VAL_SUBSET)
     generate_maze_samples(settings.TEST_SET_SIZE, settings.TEST_SUBSET)
