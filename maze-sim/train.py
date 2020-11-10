@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--model_name", type=str, default="lenet", help="lenet or resnet")
     parser.add_argument("--do_quick_export", type=str, default=False, help="Run export/evaluation script after training")
-    parser.add_argument('--num_samples_to_evaluate', type=int, default=10,
+    parser.add_argument('--num_samples_to_evaluate', type=int, default=50,
                         help='number of samples to export results of for each data subset')
 
     temp_args, _ = parser.parse_known_args()

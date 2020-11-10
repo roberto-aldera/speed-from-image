@@ -232,7 +232,7 @@ def main():
     Path(settings.MAZE_MODEL_DIR).mkdir(parents=True, exist_ok=True)
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--model_name', type=str, default=settings.ARCHITECTURE_TYPE, help='lenet or resnet')
-    parser.add_argument('--num_samples_to_evaluate', type=int, default=10,
+    parser.add_argument('--num_samples_to_evaluate', type=int, default=50,
                         help='number of samples to export results of for each data subset')
 
     temp_args, _ = parser.parse_known_args()

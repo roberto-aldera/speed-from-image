@@ -215,7 +215,7 @@ def calculate_and_export_distance_metrics(params, data_subset_type, segment_leng
 def main():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--validation_path', type=str, default="", help='path to validation folder')
-    parser.add_argument('--num_samples', type=int, default=10, help='Number of scenarios on which to run metrics')
+    parser.add_argument('--num_samples', type=int, default=50, help='Number of scenarios on which to run metrics')
 
     params = parser.parse_args()
     print("Saving pose trajectories metrics to:", params.validation_path)
