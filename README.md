@@ -1,4 +1,6 @@
 # speed-from-image
+⚠️ Messy research code 👨‍🎓
+
 A simulation environment used to train a network to predict a trajectory given an image of a scene.
 Includes generating maze simulations where a robot moves through a particular environment, or "maze".
 Robot dynamics are based on proximity to objects, generating a reasonable trajectory as it moves across the course.
